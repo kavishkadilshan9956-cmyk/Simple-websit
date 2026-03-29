@@ -148,8 +148,11 @@
         <div class="card">
             <div class="grid">
                 <div><label>දිනය</label><input type="date" id="f_date"></div>
-                <div><label>ලීටර් ගණන</label><input type="number" id="f_liters" step="0.01"></div>
-                <div><label>වියදම (Rs)</label><input type="number" id="f_cost"></div>
+                <div><label>ලීටරයක මිල (Rs)</label><input type="number" id="f_per_liter" step="0.01" oninput="calculateFuelLiters()"></div>
+                <div><label>මුළු වියදම (Rs)</label><input type="number" id="f_cost" oninput="calculateFuelLiters()"></div>
+            </div>
+            <div class="grid" style="grid-template-columns: 1fr;">
+                <div><label>ලීටර් ගණන (Auto)</label><input type="number" id="f_liters" step="0.01" style="background: #f0f0f0; font-weight: bold; color: #1b5e20;" readonly></div>
             </div>
             <button class="btn btn-blue" onclick="addFuel()">වියදම ඇතුළත් කරන්න</button>
         </div>
@@ -215,6 +218,7 @@
     function load(id, visualNo) {
         activeId = id; editIdx = -1;
         const c = db.find(x => x.id === id);
+        if(!c) return;
         ['name','phone','city'].forEach(k => document.getElementById(k).value = c[k]);
         document.getElementById('d_no').innerText = visualNo;
         document.getElementById('d_date').innerText = new Date().toLocaleDateString();
@@ -223,6 +227,7 @@
 
     function showTable() {
         const c = db.find(x => x.id === activeId);
+        if(!c) return;
         document.getElementById('d_name').innerText = c.name;
         document.getElementById('d_city').innerText = c.city;
         const tb = document.getElementById('rows'); tb.innerHTML = '';
@@ -243,16 +248,33 @@
         if(editIdx === -1) c.history.push(h); else { c.history[editIdx] = h; editIdx = -1; }
         save(); load(activeId, document.getElementById('d_no').innerText);
         ['date','acres','rate','trailers','tprice','paid'].forEach(i => document.getElementById(i).value = '');
+        document.getElementById('mainBtn').innerText = "+ දත්ත ඇතුළත් කරන්න";
     }
 
-    // --- FUEL LOGIC WITH TOTALS ---
+    // --- FUEL LOGIC WITH AUTO-CALCULATION ---
+    function calculateFuelLiters() {
+        const totalCost = parseFloat(document.getElementById('f_cost').value) || 0;
+        const pricePerLiter = parseFloat(document.getElementById('f_per_liter').value) || 0;
+        const literInput = document.getElementById('f_liters');
+
+        if (totalCost > 0 && pricePerLiter > 0) {
+            literInput.value = (totalCost / pricePerLiter).toFixed(2);
+        } else {
+            literInput.value = '';
+        }
+    }
+
     function addFuel() {
-        const f = { d: document.getElementById('f_date').value, l: parseFloat(document.getElementById('f_liters').value)||0, c: parseFloat(document.getElementById('f_cost').value)||0 };
+        const f = { 
+            d: document.getElementById('f_date').value, 
+            l: parseFloat(document.getElementById('f_liters').value)||0, 
+            c: parseFloat(document.getElementById('f_cost').value)||0 
+        };
         if(!f.d || f.l <= 0) return alert("Enter valid fuel details");
         fuel.push(f);
         localStorage.setItem('H_Fuel', JSON.stringify(fuel));
         renderFuel();
-        ['f_date','f_liters','f_cost'].forEach(i => document.getElementById(i).value = '');
+        ['f_date','f_liters','f_cost','f_per_liter'].forEach(i => document.getElementById(i).value = '');
     }
 
     function renderFuel() {
@@ -300,5 +322,6 @@
 
     render();
 </script>
+
 </body>
 </html>
