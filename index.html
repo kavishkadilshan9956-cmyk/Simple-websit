@@ -97,10 +97,11 @@
                 <div><label>මිල</label><input type="number" id="tprice"></div>
                 <div><label>ගෙවූ මුදල්</label><input type="number" id="paid"></div>
             </div>
-            <div style="display:flex; gap:10px;">
+            <div style="display:flex; flex-wrap: wrap; gap:10px;">
                 <button class="btn btn-green" onclick="saveProfile()">Profile සුරකින්න</button>
                 <button class="btn btn-blue" id="mainBtn" onclick="addEntry()">+ දත්ත ඇතුළත් කරන්න</button>
                 <button class="btn" style="background:#333;" onclick="window.print()">Print Bill</button>
+                <button class="btn btn-red" onclick="deleteCustomerProfile()">පාරිභෝගිකයා මකන්න</button>
             </div>
         </div>
 
@@ -227,7 +228,11 @@
 
     function showTable() {
         const c = db.find(x => x.id === activeId);
-        if(!c) return;
+        if(!c) {
+            document.getElementById('rows').innerHTML = '';
+            document.getElementById('total').innerText = "Rs. 0.00";
+            return;
+        }
         document.getElementById('d_name').innerText = c.name;
         document.getElementById('d_city').innerText = c.city;
         const tb = document.getElementById('rows'); tb.innerHTML = '';
@@ -251,12 +256,30 @@
         document.getElementById('mainBtn').innerText = "+ දත්ත ඇතුළත් කරන්න";
     }
 
-    // --- FUEL LOGIC WITH AUTO-CALCULATION ---
+    // --- DELETE CUSTOMER PROFILE LOGIC ---
+    function deleteCustomerProfile() {
+        if(!activeId) return alert("කරුණාකර පාරිභෝගිකයෙකු තෝරන්න.");
+        
+        if(confirm("ඔබට මෙම පාරිභෝගිකයා සහ සියලුම දත්ත මැකීමට අවශ්‍ය බව සහතිකද? මෙය නැවත ලබා ගත නොහැක.")) {
+            db = db.filter(x => x.id !== activeId);
+            save();
+            activeId = null;
+            // Clear inputs
+            ['name','phone','city','date','acres','rate','trailers','tprice','paid'].forEach(k => document.getElementById(k).value = '');
+            document.getElementById('d_no').innerText = '';
+            document.getElementById('d_name').innerText = '';
+            document.getElementById('d_city').innerText = '';
+            render();
+            showTable();
+            alert("සාර්ථකව මකා දමන ලදී.");
+        }
+    }
+
+    // --- FUEL LOGIC ---
     function calculateFuelLiters() {
         const totalCost = parseFloat(document.getElementById('f_cost').value) || 0;
         const pricePerLiter = parseFloat(document.getElementById('f_per_liter').value) || 0;
         const literInput = document.getElementById('f_liters');
-
         if (totalCost > 0 && pricePerLiter > 0) {
             literInput.value = (totalCost / pricePerLiter).toFixed(2);
         } else {
@@ -265,11 +288,7 @@
     }
 
     function addFuel() {
-        const f = { 
-            d: document.getElementById('f_date').value, 
-            l: parseFloat(document.getElementById('f_liters').value)||0, 
-            c: parseFloat(document.getElementById('f_cost').value)||0 
-        };
+        const f = { d: document.getElementById('f_date').value, l: parseFloat(document.getElementById('f_liters').value)||0, c: parseFloat(document.getElementById('f_cost').value)||0 };
         if(!f.d || f.l <= 0) return alert("Enter valid fuel details");
         fuel.push(f);
         localStorage.setItem('H_Fuel', JSON.stringify(fuel));
@@ -315,7 +334,7 @@
     function saveSettings() { document.getElementById('b_name').innerText = document.getElementById('s_name').value; document.getElementById('b_info').innerText = document.getElementById('s_info').value; alert("Saved!"); }
     function save() { localStorage.setItem('Harvest_V10', JSON.stringify(db)); }
     function addCustomer() { const id = Date.now(); db.unshift({ id, name: "නව පාරිභෝගිකයා", phone: "", city: "", history: [] }); save(); render(); load(id, `(${db.length})`); }
-    function saveProfile() { const c = db.find(x => x.id === activeId); c.name = document.getElementById('name').value; c.phone = document.getElementById('phone').value; c.city = document.getElementById('city').value; save(); render(); showTable(); alert("Saved!"); }
+    function saveProfile() { const c = db.find(x => x.id === activeId); if(!c) return; c.name = document.getElementById('name').value; c.phone = document.getElementById('phone').value; c.city = document.getElementById('city').value; save(); render(); showTable(); alert("Saved!"); }
     function editRow(i) { editIdx = i; const h = db.find(x => x.id === activeId).history[i]; ['date','acres','rate','trailers','tprice','paid'].forEach(k => document.getElementById(k).value = h[k]); document.getElementById('mainBtn').innerText = "Update Row " + (i+1); }
     function delRow(i) { if(confirm("Delete?")) { db.find(x => x.id === activeId).history.splice(i,1); save(); showTable(); } }
     function search() { let t = document.getElementById('find').value.toLowerCase(); document.querySelectorAll('.cust-item').forEach(i => i.style.display = i.innerText.toLowerCase().includes(t) ? 'flex' : 'none'); }
