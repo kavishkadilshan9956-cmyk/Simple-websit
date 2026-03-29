@@ -3,54 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>අස්වනු නෙලීම් - POS Receipt</title>
+    <title>අස්වනු නෙලීම් - POS V5</title>
     <style>
         :root { --primary: #2e7d32; --secondary: #1565c0; --bg: #f4f7f6; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; }
         
-        /* Sidebar & Editor (Screen Only) */
+        /* Sidebar Styles */
         .sidebar { width: 300px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 20px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header { padding: 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; }
+        .search-box { padding: 10px; border-bottom: 1px solid #ddd; background: #eee; }
+        .search-box input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 20px; text-indent: 10px; outline: none; }
         .customer-list { flex: 1; overflow-y: auto; }
-        .customer-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
-        .customer-item:hover { background: #e8f5e9; }
-        .customer-item.active { background: #e8f5e9; border-left: 5px solid var(--primary); font-weight: bold; }
+        .customer-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
+        .customer-item:hover { background: #f1f8e9; }
+        .customer-item.active { background: #e8f5e9; border-left: 6px solid var(--primary); font-weight: bold; }
         
         .main-content { flex: 1; padding: 20px; overflow-y: auto; background: white; }
         .edit-section { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        label { font-size: 0.75rem; font-weight: bold; color: #666; display: block; margin-bottom: 5px; }
+        label { font-size: 0.7rem; font-weight: bold; color: #666; display: block; margin-bottom: 3px; }
         input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         
         .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-save { background: var(--primary); color: white; }
-        .btn-print { background: #444; color: white; margin-left: 10px; }
+        .btn-print { background: #444; color: white; }
+        .btn-edit { background: #ffa000; color: white; font-size: 0.7rem; margin-right: 5px; }
+        .btn-del { background: #d32f2f; color: white; font-size: 0.7rem; }
 
-        /* Receipt Layout */
-        .receipt-container { width: 400px; margin: auto; padding: 15px; border: 1px solid #eee; background: white; }
-        .header-center { text-align: center; margin-bottom: 15px; }
+        /* Receipt Styles */
+        .receipt-container { width: 400px; margin: auto; padding: 15px; border: 1px solid #eee; background: white; position: relative; }
+        .header-center { text-align: center; }
         .divider { border-top: 1px dashed #000; margin: 10px 0; }
-        .receipt-row { display: flex; justify-content: space-between; font-size: 10pt; margin: 3px 0; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+        table { width: 100%; border-collapse: collapse; font-size: 9pt; }
         th { text-align: left; border-bottom: 1px solid #000; padding: 5px 0; }
-        td { padding: 8px 0; border-bottom: 1px dotted #ccc; }
+        td { padding: 8px 0; border-bottom: 1px dotted #ccc; vertical-align: top; }
 
-        /* --- PRINT STYLES FOR 80MM THERMAL --- */
         @media print {
             @page { size: 80mm auto; margin: 0; }
-            body { background: white; margin: 0; padding: 0; width: 80mm; }
-            .sidebar, .edit-section, .btn, .print-hide { display: none !important; }
+            body { background: white; width: 80mm; }
+            .sidebar, .edit-section, .btn, .print-hide, .action-btns { display: none !important; }
             .main-content { padding: 0; width: 80mm; }
             .receipt-container { width: 72mm; border: none; padding: 2mm; margin: 0; }
-            
-            h1 { font-size: 20pt !important; margin: 0; }
-            p { font-size: 11pt !important; }
-            .receipt-row, table { font-size: 10pt !important; }
-            .sig-section { display: block !important; margin-top: 30px; text-align: center; }
-            .sig-line { border-top: 1px solid #000; width: 150px; margin: 40px auto 5px; }
+            h1 { font-size: 18pt !important; }
+            .sig-section { display: block !important; text-align: center; margin-top: 30px; }
+            .sig-line { border-top: 1px solid #000; width: 140px; margin: 30px auto 5px; }
         }
-
         .sig-section { display: none; }
     </style>
 </head>
@@ -59,75 +57,90 @@
 <div class="sidebar print-hide">
     <div class="sidebar-header">
         <span>පාරිභෝගිකයින්</span>
-        <button onclick="addNewCustomer()" style="background:white; color:green; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer;">+</button>
+        <button onclick="addNewCustomer()" style="background:white; color:green; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold;">+</button>
+    </div>
+    <div class="search-box">
+        <input type="text" id="searchBar" placeholder="නම සොයන්න (Search)..." onkeyup="filterCustomers()">
     </div>
     <div class="customer-list" id="custList"></div>
 </div>
 
 <div class="main-content">
-    <div class="edit-section print-hide">
-        <h3 style="margin-top:0;">දත්ත ඇතුළත් කිරීම</h3>
-        <div class="grid-3">
-            <div><label>නම</label><input type="text" id="c_name"></div>
-            <div><label>දුරකථන</label><input type="text" id="c_phone"></div>
-            <div><label>ලිපිනය</label><input type="text" id="c_city"></div>
-        </div>
-        <div class="grid-3">
-            <div><label>දිනය</label><input type="date" id="n_date"></div>
-            <div><label>අක්කර</label><input type="number" id="n_acres"></div>
-            <div><label>මිල</label><input type="number" id="n_rate"></div>
-        </div>
-        <div class="grid-3">
-            <div><label>ටෙරල් ගණන</label><input type="number" id="n_trailers"></div>
-            <div><label>ටෙරල් මිල</label><input type="number" id="n_tprice"></div>
-            <div><label>ගෙවූ මුදල්</label><input type="number" id="n_paid"></div>
-        </div>
-        <button class="btn btn-save" onclick="saveAllData()">Save & Refresh</button>
-        <button class="btn" onclick="addEntry()" style="background:#0277bd; color:white;">+ Add Row</button>
-        <button class="btn btn-print" onclick="window.print()">Print Receipt</button>
+    <div id="welcome" style="text-align:center; margin-top:50px; color:#999;">
+        <h2>පාරිභෝගිකයෙකු තෝරාගන්න.</h2>
     </div>
 
-    <div class="receipt-container" id="printableReceipt">
-        <div class="header-center">
-            <h1 style="margin:0;">අස්වනු නෙලීම්</h1>
-            <p style="margin:2px 0;">L.B.4 හිගුරක්දමන, හිගුරක්ගොඩ</p>
-            <p style="margin:2px 0;">දුරකථන: 077-2843713</p>
+    <div id="appBody" style="display:none;">
+        <div class="edit-section print-hide">
+            <h3 style="margin-top:0; color:var(--primary);">දත්ත ඇතුළත් කිරීම / වෙනස් කිරීම</h3>
+            <div class="grid-3">
+                <div><label>නම</label><input type="text" id="c_name"></div>
+                <div><label>දුරකථන</label><input type="text" id="c_phone"></div>
+                <div><label>ලිපිනය</label><input type="text" id="c_city"></div>
+            </div>
+            <div class="grid-3">
+                <div><label>දිනය</label><input type="date" id="n_date"></div>
+                <div><label>අක්කර</label><input type="number" id="n_acres" step="0.1"></div>
+                <div><label>අක්කරයක මිල</label><input type="number" id="n_rate"></div>
+            </div>
+            <div class="grid-3">
+                <div><label>ටෙරල් ගණන</label><input type="number" id="n_trailers"></div>
+                <div><label>ටෙරල් මිල</label><input type="number" id="n_tprice"></div>
+                <div><label>ගෙවූ මුදල්</label><input type="number" id="n_paid"></div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-save" onclick="saveCustomerProfile()">Save Profile</button>
+                <button class="btn" id="addUpdateBtn" onclick="addOrUpdateEntry()" style="background:#0277bd; color:white;">+ Add/Update Entry</button>
+                <button class="btn btn-print" onclick="window.print()">Print Receipt</button>
+            </div>
+        </div>
+
+        <div class="receipt-container">
+            <div class="header-center">
+                <h1 style="margin:0;">අස්වනු නෙලීම්</h1>
+                <p style="margin:2px 0; font-size:10pt;">L.B.4 හිගුරක්දමන, හිගුරක්ගොඩ</p>
+                <p style="margin:2px 0; font-size:10pt;">දුරකථන: 077-2843713</p>
+                <div class="divider"></div>
+                <p id="disp_date" style="font-weight:bold; font-size:9pt;"></p>
+            </div>
+
+            <div style="font-size:9pt; margin-bottom:5px;">
+                <strong>පාරිභෝගිකයා:</strong> <span id="disp_name"></span><br>
+                <strong>ලිපිනය:</strong> <span id="disp_city"></span>
+            </div>
             <div class="divider"></div>
-            <p id="disp_date" style="font-weight:bold;"></p>
-        </div>
 
-        <div class="receipt-row"><strong>නම:</strong> <span id="disp_name"></span></div>
-        <div class="receipt-row"><strong>දුරකථන:</strong> <span id="disp_phone"></span></div>
-        <div class="divider"></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>විස්තරය (Details)</th>
+                        <th style="text-align:right;">මුදල</th>
+                        <th class="print-hide" style="text-align:right; width:60px;">ක්‍රියා</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>විස්තරය (Details)</th>
-                    <th style="text-align:right;">එකතුව</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+            <div class="divider"></div>
+            <div style="display:flex; justify-content:space-between; font-size:12pt; font-weight:bold;">
+                <span>මුළු හිඟය:</span>
+                <span id="grandTotal">0.00</span>
+            </div>
+            <div class="divider"></div>
 
-        <div class="divider"></div>
-        <div class="receipt-row" style="font-size:14pt; font-weight:bold;">
-            <span>මුළු හිඟය:</span>
-            <span id="grandTotal">0.00</span>
-        </div>
-        <div class="divider"></div>
-
-        <div class="sig-section">
-            <p>ස්තූතියි! නැවත එන්න.</p>
-            <div class="sig-line"></div>
-            <p>Authorized Signature</p>
+            <div class="sig-section">
+                <p style="font-size:8pt;">ස්තූතියි! නැවත එන්න.</p>
+                <div class="sig-line"></div>
+                <p style="font-size:8pt;">Authorized Signature</p>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    let customers = JSON.parse(localStorage.getItem('HarvestPOS_Sinhala_DB')) || [];
+    let customers = JSON.parse(localStorage.getItem('Harvest_Pro_V5')) || [];
     let activeId = null;
+    let editIndex = -1; // -1 means adding new, otherwise editing existing
 
     function renderList() {
         const list = document.getElementById('custList');
@@ -135,27 +148,40 @@
         customers.forEach(c => {
             const div = document.createElement('div');
             div.className = `customer-item ${activeId === c.id ? 'active' : ''}`;
-            div.innerHTML = `<div>${c.name}</div><small>${c.city}</small>`;
+            div.innerHTML = `<div>${c.name}</div><small style="color:#777">${c.city || ''}</small>`;
             div.onclick = () => loadCustomer(c.id);
             list.appendChild(div);
         });
     }
 
+    function filterCustomers() {
+        const term = document.getElementById('searchBar').value.toLowerCase();
+        const items = document.querySelectorAll('.customer-item');
+        items.forEach(item => {
+            const name = item.innerText.toLowerCase();
+            item.style.display = name.includes(term) ? 'block' : 'none';
+        });
+    }
+
     function addNewCustomer() {
         const newId = Date.now();
-        customers.unshift({ id: newId, name: "අලුත් පාරිභෝගිකයා", phone: "", city: "", history: [] });
+        customers.unshift({ id: newId, name: "නව පාරිභෝගිකයා", phone: "", city: "", history: [] });
         loadCustomer(newId);
     }
 
     function loadCustomer(id) {
         activeId = id;
+        editIndex = -1;
         const c = customers.find(cust => cust.id === id);
+        document.getElementById('welcome').style.display = 'none';
+        document.getElementById('appBody').style.display = 'block';
         document.getElementById('disp_date').innerText = "දිනය: " + new Date().toLocaleDateString();
+        
         document.getElementById('c_name').value = c.name;
         document.getElementById('c_phone').value = c.phone;
         document.getElementById('c_city').value = c.city;
-        document.getElementById('disp_name').innerText = c.name;
-        document.getElementById('disp_phone').innerText = c.phone;
+        
+        updateDisplay();
         renderTable();
         renderList();
     }
@@ -177,19 +203,22 @@
                 <tr>
                     <td>
                         <strong>${h.date}</strong><br>
-                        අක්කර: ${h.acres} x ${h.rate}<br>
-                        ටෙරල්: ${h.trailers} x ${h.tprice}
+                        ${h.acres} ac x ${h.rate} / ${h.trailers} T x ${h.tprice}
                     </td>
                     <td style="text-align:right; vertical-align:bottom;">
                         ${dayTotal.toLocaleString()}<br>
-                        <small style="color:red;">හිඟය: ${dayDue.toLocaleString()}</small>
+                        <small style="color:red;">Due: ${dayDue.toLocaleString()}</small>
+                    </td>
+                    <td class="print-hide action-btns" style="text-align:right;">
+                        <button class="btn-edit" onclick="editRow(${idx})">✎</button>
+                        <button class="btn-del" onclick="deleteRow(${idx})">×</button>
                     </td>
                 </tr>`;
         });
         document.getElementById('grandTotal').innerText = "Rs. " + totalDue.toLocaleString();
     }
 
-    function addEntry() {
+    function addOrUpdateEntry() {
         const h = {
             date: document.getElementById('n_date').value,
             acres: parseFloat(document.getElementById('n_acres').value) || 0,
@@ -199,22 +228,28 @@
             paid: parseFloat(document.getElementById('n_paid').value) || 0
         };
         if(!h.date) return alert("දිනය ඇතුළත් කරන්න.");
-        customers.find(c => c.id === activeId).history.push(h);
-        renderTable();
-    }
-
-    function saveAllData() {
+        
         const c = customers.find(cust => cust.id === activeId);
-        c.name = document.getElementById('c_name').value;
-        c.phone = document.getElementById('c_phone').value;
-        c.city = document.getElementById('c_city').value;
-        localStorage.setItem('HarvestPOS_Sinhala_DB', JSON.stringify(customers));
-        loadCustomer(activeId);
-        alert("සාර්ථකව සුරැකිණි!");
+        if(editIndex === -1) {
+            c.history.push(h);
+        } else {
+            c.history[editIndex] = h;
+            editIndex = -1;
+            document.getElementById('addUpdateBtn').innerText = "+ Add Entry";
+            document.getElementById('addUpdateBtn').style.background = "#0277bd";
+        }
+        
+        // Clear Entry
+        ['n_date','n_acres','n_rate','n_trailers','n_tprice','n_paid'].forEach(id => document.getElementById(id).value = '');
+        renderTable();
+        saveToStorage();
     }
 
-    renderList();
-</script>
-
-</body>
-</html>
+    function editRow(idx) {
+        const h = customers.find(c => c.id === activeId).history[idx];
+        document.getElementById('n_date').value = h.date;
+        document.getElementById('n_acres').value = h.acres;
+        document.getElementById('n_rate').value = h.rate;
+        document.getElementById('n_trailers').value = h.trailers;
+        document.getElementById('n_tprice').value = h.tprice;
+        document.getElementById('n_paid').value
