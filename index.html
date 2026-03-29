@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>අස්වනු නෙලීම් - Master POS V11</title>
+    <title>අස්වනු නෙලීම් - Master POS V12</title>
     <style>
-        :root { --primary: #1b5e20; --secondary: #0d47a1; --bg: #f4f7f6; --dark: #333; }
+        :root { --primary: #1b5e20; --secondary: #0d47a1; --bg: #f4f7f6; --dark: #333; --accent: #ff9800; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
+        /* Layout */
         .side-menu { width: 0; position: fixed; z-index: 1000; height: 100%; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.4s; padding-top: 60px; }
         .side-menu a { padding: 15px 25px; text-decoration: none; font-size: 18px; color: #818181; display: block; transition: 0.3s; cursor: pointer; }
         .side-menu a:hover { color: #f1f1f1; background: #222; }
         .side-menu .closebtn { position: absolute; top: 10px; right: 25px; font-size: 36px; color: white; }
-
         .sidebar { width: 320px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
         .sidebar-header { padding: 15px; background: var(--primary); color: white; display: flex; align-items: center; gap: 10px; }
         .menu-dots { font-size: 24px; cursor: pointer; padding: 5px; }
@@ -20,13 +20,13 @@
         .search-area input { width: 100%; padding: 8px; border-radius: 20px; border: 1px solid #ccc; outline: none; }
         .customer-list { flex: 1; overflow-y: auto; }
         .cust-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .cust-no { color: #888; font-weight: bold; font-size: 0.9rem; }
         .cust-item.active { background: #e8f5e9; border-left: 5px solid var(--primary); font-weight: bold; }
 
         .main-content { flex: 1; padding: 20px; overflow-y: auto; background: white; }
         .view-panel { display: none; }
         .view-panel.active { display: block; }
 
+        /* UI Elements */
         .card { background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
@@ -35,24 +35,24 @@
         .btn-green { background: var(--primary); }
         .btn-blue { background: var(--secondary); }
         .btn-red { background: #d32f2f; }
+        
+        /* Employee Specific */
+        .emp-card { border-left: 8px solid var(--secondary); padding: 20px; margin-bottom: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .emp-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; color: var(--secondary); display: flex; align-items: center; gap: 10px; }
+        .pay-display { font-size: 1.5rem; color: #1b5e20; font-weight: bold; margin-top: 10px; }
+        .auto-field { background: #f0f0f0; font-weight: bold; color: #1b5e20; }
 
         .receipt { width: 350px; margin: auto; padding: 10px; border: 1px solid #eee; font-size: 10pt; background: #fff; }
         .line { border-top: 1px dashed #000; margin: 10px 0; }
         table { width: 100%; border-collapse: collapse; }
         td, th { padding: 8px 6px; border-bottom: 1px dotted #ccc; vertical-align: top; }
 
-        .fuel-summary { display: flex; gap: 20px; margin-bottom: 15px; }
-        .sum-box { flex: 1; padding: 15px; border-radius: 8px; color: white; text-align: center; }
-        .entry-list-item { background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 5px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
-
         @media print {
             .sidebar, .side-menu, .print-hide, .btn { display: none !important; }
             body { display: block; width: 80mm; background: white; }
             .main-content { padding: 0; width: 80mm; }
             .receipt { width: 72mm; border: none; margin: 0; padding: 2mm; }
-            .sig-area { display: block !important; text-align: center; margin-top: 30px; border-top: 1px solid #000; width: 140px; margin-left: auto; margin-right: auto; }
         }
-        .sig-area { display: none; }
     </style>
 </head>
 <body>
@@ -63,8 +63,7 @@
     <a onclick="switchView('view-quick')">🔍 Quick Check Overview</a>
     <a onclick="switchView('view-totals')">💰 Total Business Status</a>
     <a onclick="switchView('view-fuel')">⛽ Fuel Tracker</a>
-    <a onclick="switchView('view-appoint')">📅 Appointments</a>
-    <a onclick="switchView('view-employee')">👥 Employee Profile</a>
+    <a onclick="switchView('view-employee')">👥 Employees (සේවක වැටුප්)</a>
     <a onclick="switchView('view-settings')">⚙️ Profile Settings</a>
 </div>
 
@@ -113,7 +112,7 @@
             </div>
             <div style="font-size:9pt;">
                 <div style="display:flex; justify-content:space-between;">
-                    <span><b>පාරිභෝගික අංකය:</b> <span id="d_no"></span></span>
+                    <span><b>අංකය:</b> <span id="d_no"></span></span>
                     <span><b>දිනය:</b> <span id="d_date"></span></span>
                 </div>
                 <b>නම:</b> <span id="d_name"></span><br>
@@ -128,26 +127,55 @@
             <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:11pt;">
                 <span>මුළු හිඟය:</span> <span id="total">0.00</span>
             </div>
-            <div class="sig-area">Authorized Signature</div>
         </div>
     </div>
 
-    <div id="view-fuel" class="view-panel">
-        <h3>⛽ Fuel Tracker & Analytics</h3>
-        <div class="fuel-summary">
-            <div class="sum-box" style="background: #ef6c00;"><small>Total Fuel Used</small><h2 id="fuel-total-liters">0 L</h2></div>
-            <div class="sum-box" style="background: #2e7d32;"><small>Total Fuel Cost</small><h2 id="fuel-total-cost">Rs. 0</h2></div>
+    <div id="view-employee" class="view-panel">
+        <h2 style="color:var(--primary);">👥 සේවක වැටුප් කළමනාකරණය</h2>
+        
+        <div class="emp-card">
+            <div class="emp-title">🚜 Machine Operator (මැෂින් ක්‍රියාකරු)</div>
+            <div class="grid">
+                <div>
+                    <label>අක්කරයක් සඳහා (Rs)</label>
+                    <input type="number" id="op_rate" placeholder="0.00" oninput="calculateEmployeePay()">
+                </div>
+                <div>
+                    <label>වැඩ ප්‍රමාණය (Auto Acres)</label>
+                    <input type="number" id="op_work" class="auto-field" readonly>
+                </div>
+            </div>
+            <div class="pay-display">මුළු වැටුප: Rs. <span id="op_total">0.00</span></div>
         </div>
+
+        <div class="emp-card" style="border-left-color: var(--accent);">
+            <div class="emp-title" style="color: var(--accent);">🛠️ Helper (සහායක)</div>
+            <div class="grid">
+                <div>
+                    <label>දිනක පඩිය (Rs)</label>
+                    <input type="number" id="hlp_wage" placeholder="0.00" oninput="calculateEmployeePay()">
+                </div>
+                <div>
+                    <label>වැඩ කළ දින ගණන</label>
+                    <input type="number" id="hlp_days" placeholder="0" oninput="calculateEmployeePay()">
+                </div>
+            </div>
+            <div class="pay-display" style="color:var(--accent);">මුළු වැටුප: Rs. <span id="hlp_total">0.00</span></div>
+        </div>
+        
+        <button class="btn btn-green" onclick="saveEmployeeRates()">වැටුප් විස්තර සුරකින්න</button>
+    </div>
+
+    <div id="view-fuel" class="view-panel">
+        <h3>⛽ Fuel Tracker</h3>
         <div class="card">
             <div class="grid">
                 <div><label>දිනය</label><input type="date" id="f_date"></div>
-                <div><label>ලීටරයක මිල (Rs)</label><input type="number" id="f_per_liter" oninput="calculateFuelLiters()"></div>
-                <div><label>මුළු වියදම (Rs)</label><input type="number" id="f_cost" oninput="calculateFuelLiters()"></div>
+                <div><label>ලීටරයක මිල</label><input type="number" id="f_per_liter" oninput="calculateFuelLiters()"></div>
+                <div><label>මුළු වියදම</label><input type="number" id="f_cost" oninput="calculateFuelLiters()"></div>
             </div>
-            <div class="grid" style="grid-template-columns: 1fr;">
-                <div><label>ලීටර් ගණන (Auto)</label><input type="number" id="f_liters" style="background: #f0f0f0; font-weight: bold;" readonly></div>
-            </div>
-            <button class="btn btn-blue" onclick="addFuel()">වියදම ඇතුළත් කරන්න</button>
+            <div><label>ලීටර් ගණන (Auto)</label><input type="number" id="f_liters" class="auto-field" readonly></div>
+            <button class="btn btn-blue" style="margin-top:10px" onclick="addFuel()">වියදම ඇතුළත් කරන්න</button>
         </div>
         <div id="fuel-list"></div>
     </div>
@@ -166,56 +194,111 @@
         </div>
     </div>
 
-    <div id="view-appoint" class="view-panel"><h3>📅 Appointments</h3><div class="card"><div class="grid"><input type="date" id="a_date"><input type="text" id="a_cust" placeholder="Name"><input type="text" id="a_note" placeholder="Note"></div><button class="btn btn-blue" onclick="addAppoint()">Add</button></div><div id="appoint-list"></div></div>
-    <div id="view-employee" class="view-panel"><h3>👥 Employees</h3><div class="card"><div class="grid"><input type="text" id="e_name" placeholder="Name"><input type="text" id="e_pos" placeholder="Job"><input type="number" id="e_pay" placeholder="Pay"></div><button class="btn btn-blue" onclick="addEmp()">Add</button></div><div id="emp-list"></div></div>
-    <div id="view-settings" class="view-panel"><h3>⚙️ Settings</h3><div class="card"><label>Name</label><input type="text" id="s_name" value="අස්වනු නෙලීම්"><br><br><label>Info</label><input type="text" id="s_info" value="L.B.4 හිගුරක්දමන, හිගුරක්ගොඩ | 077-2843713"><br><br><button class="btn btn-green" onclick="saveSettings()">Save</button></div></div>
+    <div id="view-settings" class="view-panel">
+        <h3>⚙️ Settings</h3>
+        <div class="card">
+            <label>Business Name</label><input type="text" id="s_name" value="අස්වනු නෙලීම්">
+            <br><label>Address/Info</label><input type="text" id="s_info" value="L.B.4 හිගුරක්දමන, හිගුරක්ගොඩ | 077-2843713">
+            <br><button class="btn btn-green" onclick="saveSettings()">Save Settings</button>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('Harvest_V10')) || [];
+    let db = JSON.parse(localStorage.getItem('Harvest_V12')) || [];
     let fuel = JSON.parse(localStorage.getItem('H_Fuel')) || [];
-    let appoint = JSON.parse(localStorage.getItem('H_App')) || [];
-    let employees = JSON.parse(localStorage.getItem('H_Emp')) || [];
-    let activeId = null; let editIdx = -1;
+    let empData = JSON.parse(localStorage.getItem('H_Emp_Rates')) || { opRate: 0, hlpWage: 0, hlpDays: 0 };
+    
+    let activeId = null;
+    let totalBusinessAcres = 0;
 
     function openNav() { document.getElementById("mySideMenu").style.width = "280px"; }
     function closeNav() { document.getElementById("mySideMenu").style.width = "0"; }
+    
     function switchView(id) {
         document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
+        calculateGlobalTotals(); // Update all totals whenever switching views
         if(id === 'view-quick') showQuickCheck();
-        if(id === 'view-totals') showTotals();
+        if(id === 'view-employee') loadEmployeeView();
         if(id === 'view-fuel') renderFuel();
-        if(id === 'view-appoint') renderAppoint();
-        if(id === 'view-employee') renderEmp();
         closeNav();
     }
 
+    // --- LOGIC: TOTAL CALCULATOR ---
+    function calculateGlobalTotals() {
+        let rec = 0, rem = 0, ac = 0;
+        db.forEach(c => c.history.forEach(h => { 
+            rec += h.paid; 
+            rem += ((h.acres * h.rate) + (h.trailers * h.tprice) - h.paid); 
+            ac += h.acres; 
+        }));
+        totalBusinessAcres = ac;
+        // Update Totals View
+        if(document.getElementById('t_rec')) {
+            document.getElementById('t_rec').innerText = "Rs. " + rec.toLocaleString();
+            document.getElementById('t_rem').innerText = "Rs. " + rem.toLocaleString();
+            document.getElementById('t_acre').innerText = ac.toFixed(2);
+        }
+    }
+
+    // --- LOGIC: EMPLOYEE ---
+    function loadEmployeeView() {
+        document.getElementById('op_rate').value = empData.opRate || '';
+        document.getElementById('hlp_wage').value = empData.hlpWage || '';
+        document.getElementById('hlp_days').value = empData.hlpDays || '';
+        document.getElementById('op_work').value = totalBusinessAcres.toFixed(2);
+        calculateEmployeePay();
+    }
+
+    function calculateEmployeePay() {
+        const opRate = parseFloat(document.getElementById('op_rate').value) || 0;
+        const hlpWage = parseFloat(document.getElementById('hlp_wage').value) || 0;
+        const hlpDays = parseFloat(document.getElementById('hlp_days').value) || 0;
+
+        const opTotal = opRate * totalBusinessAcres;
+        const hlpTotal = hlpWage * hlpDays;
+
+        document.getElementById('op_total').innerText = opTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('hlp_total').innerText = hlpTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+    }
+
+    function saveEmployeeRates() {
+        empData = {
+            opRate: parseFloat(document.getElementById('op_rate').value) || 0,
+            hlpWage: parseFloat(document.getElementById('hlp_wage').value) || 0,
+            hlpDays: parseFloat(document.getElementById('hlp_days').value) || 0
+        };
+        localStorage.setItem('H_Emp_Rates', JSON.stringify(empData));
+        alert("වැටුප් විස්තර සාර්ථකව සුරකින ලදී!");
+    }
+
+    // --- LOGIC: LEDGER ---
     function render() {
         const l = document.getElementById('list'); l.innerHTML = '';
         db.forEach((c, index) => {
             const d = document.createElement('div');
             d.className = `cust-item ${activeId === c.id ? 'active' : ''}`;
-            let visualNo = `(${db.length - index})`;
-            d.innerHTML = `<div><span class="cust-no">${visualNo}</span> ${c.name}</div><small>${c.city || ''}</small>`;
-            d.onclick = () => load(c.id, visualNo);
+            d.innerHTML = `<div><span style="color:#888; font-weight:bold;">(${db.length - index})</span> ${c.name}</div>`;
+            d.onclick = () => load(c.id, `(${db.length - index})`);
             l.appendChild(d);
         });
     }
 
     function load(id, visualNo) {
-        activeId = id; editIdx = -1;
+        activeId = id;
         const c = db.find(x => x.id === id); if(!c) return;
         ['name','phone','city'].forEach(k => document.getElementById(k).value = c[k]);
         document.getElementById('d_no').innerText = visualNo;
-        document.getElementById('d_date').innerText = new Date().toLocaleDateString();
         showTable(); render();
     }
 
     function showTable() {
         const c = db.find(x => x.id === activeId);
         if(!c) { document.getElementById('rows').innerHTML = ''; document.getElementById('total').innerText = "Rs. 0.00"; return; }
-        document.getElementById('d_name').innerText = c.name; document.getElementById('d_city').innerText = c.city;
+        document.getElementById('d_name').innerText = c.name;
+        document.getElementById('d_city').innerText = c.city;
         const tb = document.getElementById('rows'); tb.innerHTML = '';
         let bal = 0;
         c.history.forEach((h, i) => {
@@ -227,23 +310,36 @@
     }
 
     function addEntry() {
-        const h = { date: document.getElementById('date').value, acres: parseFloat(document.getElementById('acres').value)||0, rate: parseFloat(document.getElementById('rate').value)||0, trailers: parseFloat(document.getElementById('trailers').value)||0, tprice: parseFloat(document.getElementById('tprice').value)||0, paid: parseFloat(document.getElementById('paid').value)||0 };
+        const h = { 
+            date: document.getElementById('date').value, 
+            acres: parseFloat(document.getElementById('acres').value)||0, 
+            rate: parseFloat(document.getElementById('rate').value)||0, 
+            trailers: parseFloat(document.getElementById('trailers').value)||0, 
+            tprice: parseFloat(document.getElementById('tprice').value)||0, 
+            paid: parseFloat(document.getElementById('paid').value)||0 
+        };
         if(!h.date || !activeId) return alert("Select Customer & Date");
-        const c = db.find(x => x.id === activeId);
-        if(editIdx === -1) c.history.push(h); else { c.history[editIdx] = h; editIdx = -1; }
-        save(); load(activeId, document.getElementById('d_no').innerText);
+        db.find(x => x.id === activeId).history.push(h);
+        save(); calculateGlobalTotals(); load(activeId, document.getElementById('d_no').innerText);
         ['date','acres','rate','trailers','tprice','paid'].forEach(i => document.getElementById(i).value = '');
     }
 
-    function deleteCustomerProfile() {
-        if(!activeId) return alert("Please select a customer.");
-        if(confirm("Are you sure you want to delete this profile?")) {
-            db = db.filter(x => x.id !== activeId); save(); activeId = null;
-            ['name','phone','city','date','acres','rate','trailers','tprice','paid'].forEach(k => document.getElementById(k).value = '');
-            render(); showTable(); alert("Deleted!");
-        }
+    // --- LOGIC: QUICK CHECK ---
+    function showQuickCheck() {
+        const tb = document.getElementById('quick-rows');
+        tb.innerHTML = '<thead><tr style="background:#eee;"><th>#</th><th>නම</th><th>දුරකථන</th><th align="right">හිඟය (Rs)</th></tr></thead>';
+        let total = 0;
+        db.forEach((c, idx) => {
+            let due = c.history.reduce((s, h) => s + ((h.acres * h.rate) + (h.trailers * h.tprice) - h.paid), 0);
+            if(due > 0) {
+                total += due;
+                tb.innerHTML += `<tr><td>(${db.length - idx})</td><td>${c.name}</td><td>${c.phone || '-'}</td><td align="right" style="color:red; font-weight:bold;">${due.toLocaleString()}</td></tr>`;
+            }
+        });
+        tb.innerHTML += `<tr style="background:#fff3e0; border-top:2px solid #333;"><td colspan="3" style="font-weight:bold; text-align:center;">මුළු හිඟ මුදල</td><td align="right" style="color:red; font-weight:bold;">${total.toLocaleString()}</td></tr>`;
     }
 
+    // --- LOGIC: FUEL ---
     function calculateFuelLiters() {
         const cost = parseFloat(document.getElementById('f_cost').value)||0;
         const ppl = parseFloat(document.getElementById('f_per_liter').value)||0;
@@ -259,47 +355,20 @@
 
     function renderFuel() {
         const div = document.getElementById('fuel-list'); div.innerHTML = '';
-        let totalL = 0, totalC = 0;
         fuel.forEach((f, i) => {
-            totalL += f.l; totalC += f.c;
             div.innerHTML += `<div class="entry-list-item"><span><b>${f.d}</b> - ${f.l}L</span><span>Rs. ${f.c.toLocaleString()} <button class="btn-red" onclick="delFuel(${i})">×</button></span></div>`;
         });
-        document.getElementById('fuel-total-liters').innerText = totalL.toFixed(2) + " L";
-        document.getElementById('fuel-total-cost').innerText = "Rs. " + totalC.toLocaleString();
     }
     function delFuel(i) { fuel.splice(i,1); localStorage.setItem('H_Fuel', JSON.stringify(fuel)); renderFuel(); }
 
-    function showQuickCheck() {
-        const tb = document.getElementById('quick-rows');
-        tb.innerHTML = '<thead><tr style="background:#eee;"><th>අංකය</th><th>නම</th><th>දුරකථන</th><th align="right">හිඟය (Rs)</th></tr></thead>';
-        let total = 0;
-        db.forEach((c, idx) => {
-            let due = c.history.reduce((s, h) => s + ((h.acres * h.rate) + (h.trailers * h.tprice) - h.paid), 0);
-            if(due > 0) {
-                total += due;
-                tb.innerHTML += `<tr><td>(${db.length - idx})</td><td>${c.name}</td><td>${c.phone || '-'}</td><td align="right" style="color:red; font-weight:bold;">${due.toLocaleString()}</td></tr>`;
-            }
-        });
-        tb.innerHTML += `<tr style="background:#fff3e0; border-top:2px solid #333;"><td colspan="3" style="font-weight:bold; text-align:center;">මුළු එකතුව</td><td align="right" style="color:red; font-weight:bold; font-size:1.1rem;">${total.toLocaleString()}</td></tr>`;
-    }
-
-    function showTotals() {
-        let rec = 0, rem = 0, ac = 0;
-        db.forEach(c => c.history.forEach(h => { rec += h.paid; rem += ((h.acres * h.rate) + (h.trailers * h.tprice) - h.paid); ac += h.acres; }));
-        document.getElementById('t_rec').innerText = "Rs. " + rec.toLocaleString();
-        document.getElementById('t_rem').innerText = "Rs. " + rem.toLocaleString();
-        document.getElementById('t_acre').innerText = ac.toFixed(2);
-    }
-
-    function addAppoint() { appoint.push({d: document.getElementById('a_date').value, c: document.getElementById('a_cust').value, n: document.getElementById('a_note').value }); localStorage.setItem('H_App', JSON.stringify(appoint)); renderAppoint(); }
-    function renderAppoint() { const div = document.getElementById('appoint-list'); div.innerHTML = ''; appoint.forEach(a => div.innerHTML += `<div class="entry-list-item"><span>${a.d} | <b>${a.c}</b></span><small>${a.n}</small></div>`); }
-    function addEmp() { employees.push({n: document.getElementById('e_name').value, p: document.getElementById('e_pos').value, s: document.getElementById('e_pay').value }); localStorage.setItem('H_Emp', JSON.stringify(employees)); renderEmp(); }
-    function renderEmp() { const div = document.getElementById('emp-list'); div.innerHTML = ''; employees.forEach(e => div.innerHTML += `<div class="entry-list-item"><span>${e.n} (${e.p})</span><b>Rs. ${e.s}</b></div>`); }
-    function saveSettings() { document.getElementById('b_name').innerText = document.getElementById('s_name').value; document.getElementById('b_info').innerText = document.getElementById('s_info').value; alert("Saved!"); }
-    function save() { localStorage.setItem('Harvest_V10', JSON.stringify(db)); }
+    function save() { localStorage.setItem('Harvest_V12', JSON.stringify(db)); }
+    function saveProfile() { const c = db.find(x => x.id === activeId); if(!c) return; c.name = document.getElementById('name').value; c.phone = document.getElementById('phone').value; c.city = document.getElementById('city').value; save(); render(); showTable(); alert("Profile Saved!"); }
+    function deleteCustomerProfile() { if(confirm("Are you sure?")) { db = db.filter(x => x.id !== activeId); save(); calculateGlobalTotals(); activeId = null; render(); showTable(); } }
     function addCustomer() { const id = Date.now(); db.unshift({ id, name: "නව පාරිභෝගිකයා", phone: "", city: "", history: [] }); save(); render(); load(id, `(${db.length})`); }
-    function saveProfile() { const c = db.find(x => x.id === activeId); if(!c) return; c.name = document.getElementById('name').value; c.phone = document.getElementById('phone').value; c.city = document.getElementById('city').value; save(); render(); showTable(); alert("Saved!"); }
     function search() { let t = document.getElementById('find').value.toLowerCase(); document.querySelectorAll('.cust-item').forEach(i => i.style.display = i.innerText.toLowerCase().includes(t) ? 'flex' : 'none'); }
+    function saveSettings() { document.getElementById('b_name').innerText = document.getElementById('s_name').value; document.getElementById('b_info').innerText = document.getElementById('s_info').value; alert("Settings Saved!"); }
+
+    calculateGlobalTotals();
     render();
 </script>
 
