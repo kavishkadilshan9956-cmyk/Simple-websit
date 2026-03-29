@@ -3,26 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>අස්වනු නෙලීම් - Master POS V14</title>
+    <title>අස්වනු නෙලීම් - Master POS (Edit Enabled)</title>
     <style>
         :root { --primary: #1b5e20; --secondary: #0d47a1; --bg: #f4f7f6; --accent: #e65100; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Layout */
         .side-menu { width: 0; position: fixed; z-index: 1000; height: 100%; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.4s; padding-top: 60px; }
         .side-menu a { padding: 15px 25px; text-decoration: none; font-size: 18px; color: #818181; display: block; transition: 0.3s; cursor: pointer; }
         .side-menu a:hover { color: #f1f1f1; background: #222; }
         .sidebar { width: 320px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
         .sidebar-header { padding: 15px; background: var(--primary); color: white; display: flex; align-items: center; gap: 10px; }
         .customer-list { flex: 1; overflow-y: auto; }
-        .cust-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; }
+        .cust-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .cust-no { color: #888; font-weight: bold; font-size: 0.9rem; }
         .cust-item.active { background: #e8f5e9; border-left: 5px solid var(--primary); font-weight: bold; }
 
         .main-content { flex: 1; padding: 20px; overflow-y: auto; background: white; }
         .view-panel { display: none; }
         .view-panel.active { display: block; }
 
-        /* UI Cards & Forms */
         .card { background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
@@ -32,28 +31,31 @@
         .btn-blue { background: var(--secondary); }
         .btn-red { background: #d32f2f; }
         
-        /* Stats Box */
-        .stats-row { display: flex; gap: 10px; margin-bottom: 15px; }
-        .stat-card { flex: 1; padding: 15px; border-radius: 8px; color: white; text-align: center; }
-        
-        /* Receipt Styles (Printing) */
+        /* Receipt Table Edit Styling */
+        .edit-btn { background: #ff9800; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; margin-right: 5px; font-size: 10px; }
+        .del-btn { background: #f44336; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 10px; }
+
         #receipt-box { width: 80mm; margin: auto; padding: 5px; background: white; border: 1px solid #eee; }
         .receipt-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
         .r-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .r-table td { padding: 5px 0; border-bottom: 1px dotted #ccc; }
+        .r-table td { padding: 5px 0; border-bottom: 1px dotted #ccc; vertical-align: top; }
+        .line { border-top: 1px dashed #000; margin: 10px 0; }
 
         @media print {
             body { background: white; display: block; }
-            .sidebar, .side-menu, .btn, .print-hide, .card, h3 { display: none !important; }
+            .sidebar, .side-menu, .btn, .print-hide, .card, h3, .edit-btn, .del-btn { display: none !important; }
             .main-content { padding: 0; margin: 0; width: 80mm; }
-            #receipt-box { border: none; width: 80mm; padding: 0; }
+            #receipt-box { border: none; width: 72mm; padding: 0; margin: 0; }
             @page { margin: 0; }
+            .sig-area { display: block !important; text-align: center; margin-top: 30px; border-top: 1px solid #000; width: 140px; margin-left: auto; margin-right: auto; }
         }
+        .sig-area { display: none; }
     </style>
 </head>
 <body>
 
 <div id="mySideMenu" class="side-menu">
+    <a style="font-size: 30px; color: white; cursor: pointer;" onclick="closeNav()">&times;</a>
     <a onclick="switchView('view-main')">🚜 Ledger (බිල්පත)</a>
     <a onclick="switchView('view-quick')">🔍 Quick Check Overview</a>
     <a onclick="switchView('view-fuel')">⛽ Fuel Tracker</a>
@@ -63,11 +65,11 @@
 
 <div class="sidebar print-hide">
     <div class="sidebar-header">
-        <span style="cursor:pointer;" onclick="openNav()">&#9776;</span>
+        <span style="cursor:pointer; font-size: 20px;" onclick="openNav()">&#9776;</span>
         <span style="font-weight:bold;">අස්වනු නෙලීම් V14</span>
-        <button onclick="addCustomer()" style="margin-left:auto; border:none; background:white; color:green; border-radius:50%; width:28px; height:28px; font-weight:bold;">+</button>
+        <button onclick="addCustomer()" style="margin-left:auto; border:none; background:white; color:green; border-radius:50%; width:28px; height:28px; font-weight:bold; cursor:pointer;">+</button>
     </div>
-    <div style="padding:10px;"><input type="text" id="find" placeholder="Search..." onkeyup="search()" style="border-radius:20px;"></div>
+    <div style="padding:10px;"><input type="text" id="find" placeholder="සොයන්න..." onkeyup="search()" style="border-radius:20px;"></div>
     <div class="customer-list" id="list"></div>
 </div>
 
@@ -92,30 +94,37 @@
             </div>
             <div style="display:flex; gap:10px; flex-wrap: wrap;">
                 <button class="btn btn-green" onclick="saveProfile()">Profile සුරකින්න</button>
-                <button class="btn btn-blue" onclick="addEntry()">+ දත්ත ඇතුළත් කරන්න</button>
+                <button class="btn btn-blue" id="mainBtn" onclick="addEntry()">+ දත්ත ඇතුළත් කරන්න</button>
                 <button class="btn" style="background:#333;" onclick="window.print()">Print Receipt</button>
-                <button class="btn btn-red" onclick="deleteCustomer()">Delete</button>
+                <button class="btn btn-red" onclick="deleteCustomer()">Delete Profile</button>
             </div>
         </div>
 
         <div id="receipt-box">
             <div class="receipt-header">
                 <h2 style="margin:5px 0;">අස්වනු නෙලීම්</h2>
-                <p style="font-size:12px; margin:2px;">L.B.4 හිගුරක්දමන | 077-2843713</p>
+                <p style="font-size:11px; margin:2px;">L.B.4 හිගුරක්දමන, හිගුරක්ගොඩ | 077-2843713</p>
+                <div class="line"></div>
             </div>
-            <div style="font-size:13px; margin-bottom:10px; line-height: 1.5;">
-                නම: <b id="d_name"></b><br>
-                අංකය: <b id="d_no"></b> | දිනය: <b id="d_date"></b>
+            <div style="font-size:12px; line-height: 1.4; margin-bottom: 5px;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span><b>අංකය:</b> <span id="d_no"></span></span>
+                    <span><b>දිනය:</b> <span id="d_date"></span></span>
+                </div>
+                <b>නම:</b> <span id="d_name"></span><br>
+                <b>ලිපිනය:</b> <span id="d_city"></span>
             </div>
+            <div class="line"></div>
             <table class="r-table">
-                <thead><tr style="text-align:left; border-bottom:1px solid #000;"><th>විස්තරය</th><th align="right">මුදල (Rs)</th></tr></thead>
+                <thead><tr style="text-align:left; border-bottom:1px solid #000;"><th>විස්තරය (Details)</th><th align="right">මුදල (Rs)</th></tr></thead>
                 <tbody id="rows"></tbody>
             </table>
-            <div style="text-align:right; margin-top:15px; border-top:2px solid #000; padding-top:5px;">
-                <span style="font-size:14px;">ගෙවීමට ඇති මුළු මුදල:</span><br>
-                <b style="font-size:22px;">Rs. <span id="total">0</span></b>
+            <div class="line"></div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px; margin-top: 5px;">
+                <span>මුළු හිඟය (Total Due):</span> 
+                <span>Rs. <span id="total">0</span></span>
             </div>
-            <center style="margin-top:20px; font-size:10px; color:#888;">ස්තූතියි! නැවත එන්න.</center>
+            <div class="sig-area">අනුමත කළේ</div>
         </div>
     </div>
 
@@ -191,6 +200,7 @@
     let fuel = JSON.parse(localStorage.getItem('Fuel_V14')) || [];
     let emp = JSON.parse(localStorage.getItem('Emp_V14')) || { opR:0, opP:[], hlR:0, hlD:[], hlP:[] };
     let activeId = null;
+    let editIdx = -1; // To track which row is being edited
 
     function openNav() { document.getElementById("mySideMenu").style.width = "260px"; }
     function closeNav() { document.getElementById("mySideMenu").style.width = "0"; }
@@ -218,10 +228,11 @@
         return ac;
     }
 
+    // Fuel Logic
     function calcFuelL() {
         const cost = parseFloat(document.getElementById('f_cost').value)||0;
         const ppl = parseFloat(document.getElementById('f_ppl').value)||0;
-        document.getElementById('f_liters').value = (cost/ppl).toFixed(2);
+        document.getElementById('f_liters').value = (ppl > 0) ? (cost/ppl).toFixed(2) : 0;
     }
     function addFuel() {
         const cost = parseFloat(document.getElementById('f_cost').value)||0;
@@ -238,13 +249,14 @@
             tc += f.cost; tl += f.liters;
             list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; padding:10px;">
                 <span>${f.date} | ${f.liters} L</span><b>Rs. ${f.cost}</b>
-                <button onclick="delFuel(${i})" style="color:red; background:none; border:none; cursor:pointer;">×</button></div>`;
+                <button onclick="delFuel(${i})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">×</button></div>`;
         });
         document.getElementById('fuel_total_l').innerText = tl.toFixed(2) + " L";
         document.getElementById('fuel_total_c').innerText = "Rs. " + tc.toLocaleString();
     }
-    function delFuel(i) { fuel.splice(i, 1); localStorage.setItem('Fuel_V14', JSON.stringify(fuel)); renderFuel(); }
+    function delFuel(i) { if(confirm("මකා දමන්නද?")) { fuel.splice(i, 1); localStorage.setItem('Fuel_V14', JSON.stringify(fuel)); renderFuel(); } }
 
+    // Employee Logic
     function renderEmp() {
         const ac = updateGlobalStats();
         document.getElementById('op_rate').value = emp.opR;
@@ -279,60 +291,105 @@
         renderEmp();
     }
 
+    // Customer & Ledger Logic
     function addCustomer() {
         const id = Date.now();
-        db.unshift({ id, name: "New Customer", phone: "", city: "", history: [] });
+        db.unshift({ id, name: "නව පාරිභෝගිකයා", phone: "", city: "", history: [] });
         save(); renderList(); load(id);
     }
     function renderList() {
         const l = document.getElementById('list'); l.innerHTML = '';
         db.forEach((c, index) => {
-            const visualNo = db.length - index;
+            const visualNo = `(${db.length - index})`;
             const d = document.createElement('div');
             d.className = `cust-item ${activeId === c.id ? 'active' : ''}`;
-            d.innerHTML = `<span>(${visualNo}) ${c.name}</span><small>${c.phone}</small>`;
+            d.innerHTML = `<span><span class="cust-no">${visualNo}</span> ${c.name}</span><small>${c.phone}</small>`;
             d.onclick = () => load(c.id);
             l.appendChild(d);
         });
     }
 
-    // FIXED: Load function now correctly updates Date and ID
     function load(id) {
-        activeId = id; 
+        activeId = id; editIdx = -1;
+        document.getElementById('mainBtn').innerText = "+ දත්ත ඇතුළත් කරන්න";
         const c = db.find(x => x.id === id); 
         if(!c) return;
-        
-        // Find index for visual number
-        const visualNo = db.length - db.findIndex(x => x.id === id);
-        
+        const visualNo = `(${db.length - db.findIndex(x => x.id === id)})`;
         ['name','phone','city'].forEach(k => document.getElementById(k).value = c[k]);
-        document.getElementById('d_no').innerText = "#" + visualNo;
-        
-        // Update Date in Receipt to today's date automatically
+        document.getElementById('d_no').innerText = visualNo;
         document.getElementById('d_date').innerText = new Date().toLocaleDateString();
-        
-        showTable(); 
-        renderList();
+        showTable(); renderList();
     }
 
     function showTable() {
         const c = db.find(x => x.id === activeId); if(!c) return;
         document.getElementById('d_name').innerText = c.name;
+        document.getElementById('d_city').innerText = c.city;
         const tb = document.getElementById('rows'); tb.innerHTML = '';
         let bal = 0;
-        c.history.forEach(h => {
+        c.history.forEach((h, i) => {
             let sub = (h.acres*h.rate)+(h.trailers*h.tprice); 
             let due = sub-h.paid; bal += due;
-            tb.innerHTML += `<tr><td>${h.date}<br>${h.acres} ac × ${h.rate}</td><td align="right"><b>${sub.toLocaleString()}</b></td></tr>`;
+            tb.innerHTML += `<tr>
+                <td><b>${h.date}</b><br>${h.acres}ac × ${h.rate}<br>${h.trailers}T × ${h.tprice}</td>
+                <td align="right">
+                    <b>${sub.toLocaleString()}</b><br>
+                    <small style="color:red" class="print-hide">Due: ${due.toLocaleString()}</small><br class="print-hide">
+                    <button class="edit-btn print-hide" onclick="editRow(${i})">✎ Edit</button>
+                    <button class="del-btn print-hide" onclick="delRow(${i})">×</button>
+                </td>
+            </tr>`;
         });
         document.getElementById('total').innerText = bal.toLocaleString();
     }
-    function addEntry() {
-        const h = { date: document.getElementById('date').value, acres: parseFloat(document.getElementById('acres').value)||0, rate: parseFloat(document.getElementById('rate').value)||0, trailers: parseFloat(document.getElementById('trailers').value)||0, tprice: parseFloat(document.getElementById('tprice').value)||0, paid: parseFloat(document.getElementById('paid').value)||0 };
-        if(!h.date || !activeId) return alert("Select Date & Customer");
-        db.find(x => x.id === activeId).history.push(h);
-        save(); load(activeId);
+
+    // Bill EDIT and DELETE Function
+    function editRow(i) {
+        editIdx = i;
+        const h = db.find(x => x.id === activeId).history[i];
+        document.getElementById('date').value = h.date;
+        document.getElementById('acres').value = h.acres;
+        document.getElementById('rate').value = h.rate;
+        document.getElementById('trailers').value = h.trailers;
+        document.getElementById('tprice').value = h.tprice;
+        document.getElementById('paid').value = h.paid;
+        document.getElementById('mainBtn').innerText = "Update Row (" + (i+1) + ")";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    function delRow(i) {
+        if(confirm("මෙම පේළිය මකා දැමීමට අවශ්‍යද?")) {
+            db.find(x => x.id === activeId).history.splice(i, 1);
+            save(); showTable(); updateGlobalStats();
+        }
+    }
+
+    function addEntry() {
+        const h = { 
+            date: document.getElementById('date').value, 
+            acres: parseFloat(document.getElementById('acres').value)||0, 
+            rate: parseFloat(document.getElementById('rate').value)||0, 
+            trailers: parseFloat(document.getElementById('trailers').value)||0, 
+            tprice: parseFloat(document.getElementById('tprice').value)||0, 
+            paid: parseFloat(document.getElementById('paid').value)||0 
+        };
+        if(!h.date || !activeId) return alert("දිනය සහ පාරිභෝගිකයා තෝරන්න!");
+
+        const c = db.find(x => x.id === activeId);
+        if(editIdx === -1) {
+            c.history.push(h); // New Entry
+        } else {
+            c.history[editIdx] = h; // Update Existing
+            editIdx = -1;
+            document.getElementById('mainBtn').innerText = "+ දත්ත ඇතුළත් කරන්න";
+        }
+
+        save(); 
+        showTable();
+        updateGlobalStats();
+        ['acres','rate','trailers','tprice','paid'].forEach(i => document.getElementById(i).value = '');
+    }
+
     function renderQuick() {
         const tb = document.getElementById('quick-table');
         tb.innerHTML = '<tr style="background:#eee;"><th>#</th><th>පාරිභෝගිකයා</th><th>දුරකථන</th><th>හිඟ මුදල</th></tr>';
@@ -341,12 +398,14 @@
             if(due > 0) tb.innerHTML += `<tr><td>(${db.length-idx})</td><td>${c.name}</td><td>${c.phone}</td><td align="right"><b>${due.toLocaleString()}</b></td></tr>`;
         });
     }
+
     function saveProfile() {
         const c = db.find(x => x.id === activeId); if(!c) return;
         c.name = document.getElementById('name').value; c.phone = document.getElementById('phone').value; c.city = document.getElementById('city').value;
-        save(); renderList(); alert("Saved!");
+        save(); renderList(); alert("තොරතුරු සුරැකිණි!");
     }
-    function deleteCustomer() { if(confirm("Delete this profile?")) { db = db.filter(x=>x.id!==activeId); save(); location.reload(); } }
+
+    function deleteCustomer() { if(confirm("මෙම පාරිභෝගිකයා සහ දත්ත සම්පූර්ණයෙන්ම මකා දමන්නද?")) { db = db.filter(x=>x.id!==activeId); save(); location.reload(); } }
     function save() { localStorage.setItem('Harvest_V14', JSON.stringify(db)); }
     function search() { let t = document.getElementById('find').value.toLowerCase(); document.querySelectorAll('.cust-item').forEach(i => i.style.display = i.innerText.toLowerCase().includes(t) ? 'flex' : 'none'); }
 
@@ -355,4 +414,4 @@
 </script>
 
 </body>
-</html>
+                     </html>
