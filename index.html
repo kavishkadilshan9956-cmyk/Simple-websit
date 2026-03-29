@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>අස්වනු නෙලීම් - Master POS V12</title>
+    <title>අස්වනු නෙලීම් - Master POS V13</title>
     <style>
         :root { --primary: #1b5e20; --secondary: #0d47a1; --bg: #f4f7f6; --dark: #333; --accent: #ff9800; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Layout */
+        /* Menu & Sidebar */
         .side-menu { width: 0; position: fixed; z-index: 1000; height: 100%; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.4s; padding-top: 60px; }
         .side-menu a { padding: 15px 25px; text-decoration: none; font-size: 18px; color: #818181; display: block; transition: 0.3s; cursor: pointer; }
         .side-menu a:hover { color: #f1f1f1; background: #222; }
@@ -36,23 +36,17 @@
         .btn-blue { background: var(--secondary); }
         .btn-red { background: #d32f2f; }
         
-        /* Employee Specific */
+        /* Employee Section */
         .emp-card { border-left: 8px solid var(--secondary); padding: 20px; margin-bottom: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .emp-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; color: var(--secondary); display: flex; align-items: center; gap: 10px; }
-        .pay-display { font-size: 1.5rem; color: #1b5e20; font-weight: bold; margin-top: 10px; }
-        .auto-field { background: #f0f0f0; font-weight: bold; color: #1b5e20; }
+        .pay-box { background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #eee; margin-top: 10px; }
+        .pay-row { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 4px 0; border-bottom: 1px solid #eee; }
+        .balance-red { color: #d32f2f; font-weight: bold; font-size: 1.1rem; }
+        .auto-field { background: #eee !important; font-weight: bold; color: #1b5e20; }
+        
+        .log-list { max-height: 150px; overflow-y: auto; background: #fff; border: 1px solid #ddd; margin-top: 5px; padding: 5px; border-radius: 4px; }
+        .log-item { display: flex; justify-content: space-between; padding: 5px; border-bottom: 1px dotted #ccc; font-size: 0.85rem; }
 
-        .receipt { width: 350px; margin: auto; padding: 10px; border: 1px solid #eee; font-size: 10pt; background: #fff; }
-        .line { border-top: 1px dashed #000; margin: 10px 0; }
-        table { width: 100%; border-collapse: collapse; }
-        td, th { padding: 8px 6px; border-bottom: 1px dotted #ccc; vertical-align: top; }
-
-        @media print {
-            .sidebar, .side-menu, .print-hide, .btn { display: none !important; }
-            body { display: block; width: 80mm; background: white; }
-            .main-content { padding: 0; width: 80mm; }
-            .receipt { width: 72mm; border: none; margin: 0; padding: 2mm; }
-        }
+        @media print { .sidebar, .side-menu, .btn, .print-hide { display: none !important; } }
     </style>
 </head>
 <body>
@@ -64,14 +58,13 @@
     <a onclick="switchView('view-totals')">💰 Total Business Status</a>
     <a onclick="switchView('view-fuel')">⛽ Fuel Tracker</a>
     <a onclick="switchView('view-employee')">👥 Employees (සේවක වැටුප්)</a>
-    <a onclick="switchView('view-settings')">⚙️ Profile Settings</a>
 </div>
 
 <div class="sidebar print-hide">
     <div class="sidebar-header">
         <span class="menu-dots" onclick="openNav()">&#9776;</span>
         <span style="font-weight:bold;">අස්වනු නෙලීම්</span>
-        <button onclick="addCustomer()" style="margin-left:auto; cursor:pointer; border:none; background:white; color:green; border-radius:50%; width:28px; height:28px; font-weight:bold;">+</button>
+        <button onclick="addCustomer()" style="margin-left:auto; border:none; background:white; color:green; border-radius:50%; width:28px; height:28px; font-weight:bold;">+</button>
     </div>
     <div class="search-area"><input type="text" id="find" placeholder="Search name..." onkeyup="search()"></div>
     <div class="customer-list" id="list"></div>
@@ -104,66 +97,61 @@
             </div>
         </div>
 
-        <div class="receipt">
-            <div style="text-align:center;">
-                <h2 id="b_name" style="margin:0;">අස්වනු නෙලීම්</h2>
-                <p id="b_info" style="font-size:8.5pt; margin:4px 0;">L.B.4 හිගුරක්දමන, හිගුරක්ගොඩ | 077-2843713</p>
-                <div class="line"></div>
+        <div id="receipt-area" style="padding:10px; border:1px solid #ddd; background:white;">
+            <center><h3>අස්වනු නෙලීම්</h3><p>L.B.4 හිගුරක්දමන | 077-2843713</p></center>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #000; padding-bottom:5px;">
+                <span>නම: <b id="d_name"></b></span>
+                <span>අංකය: <b id="d_no"></b></span>
             </div>
-            <div style="font-size:9pt;">
-                <div style="display:flex; justify-content:space-between;">
-                    <span><b>අංකය:</b> <span id="d_no"></span></span>
-                    <span><b>දිනය:</b> <span id="d_date"></span></span>
-                </div>
-                <b>නම:</b> <span id="d_name"></span><br>
-                <b>ලිපිනය:</b> <span id="d_city"></span>
-            </div>
-            <div class="line"></div>
-            <table>
-                <thead><tr><th align="left">Details</th><th align="right">Amount</th></tr></thead>
-                <tbody id="rows"></tbody>
-            </table>
-            <div class="line"></div>
-            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:11pt;">
-                <span>මුළු හිඟය:</span> <span id="total">0.00</span>
-            </div>
+            <table width="100%" style="margin-top:10px;"><tbody id="rows"></tbody></table>
+            <h3 align="right" style="border-top:1px solid #000; padding-top:10px;">හිඟ මුදල: Rs. <span id="total">0</span></h3>
         </div>
     </div>
 
     <div id="view-employee" class="view-panel">
-        <h2 style="color:var(--primary);">👥 සේවක වැටුප් කළමනාකරණය</h2>
-        
+        <h2 style="color:var(--primary);">👥 සේවක වැටුප් හා ගෙවීම්</h2>
+
         <div class="emp-card">
-            <div class="emp-title">🚜 Machine Operator (මැෂින් ක්‍රියාකරු)</div>
+            <div style="font-weight:bold; font-size:1.1rem; color:var(--secondary); margin-bottom:10px;">🚜 මැෂින් ක්‍රියාකරු (Operator)</div>
             <div class="grid">
-                <div>
-                    <label>අක්කරයක් සඳහා (Rs)</label>
-                    <input type="number" id="op_rate" placeholder="0.00" oninput="calculateEmployeePay()">
-                </div>
-                <div>
-                    <label>වැඩ ප්‍රමාණය (Auto Acres)</label>
-                    <input type="number" id="op_work" class="auto-field" readonly>
-                </div>
+                <div><label>අක්කරයකට (Rs)</label><input type="number" id="op_rate" oninput="calcEmp()"></div>
+                <div><label>මුළු අක්කර</label><input type="number" id="op_work" class="auto-field" readonly></div>
+                <div><label>ලබාගත් මුදල්</label><input type="number" id="op_pay_input" placeholder="Rs."></div>
             </div>
-            <div class="pay-display">මුළු වැටුප: Rs. <span id="op_total">0.00</span></div>
+            <button class="btn btn-blue" style="padding:5px 15px; font-size:0.8rem;" onclick="addEmpPayment('op')">මුදල් ලබාදීම සටහන් කරන්න</button>
+            
+            <div class="pay-box">
+                <div class="pay-row"><span>මුළු උපයන මුදල:</span> <b id="op_earned">0.00</b></div>
+                <div class="pay-row"><span>ලබාගත් මුළු මුදල්:</span> <b id="op_taken">0.00</b></div>
+                <div class="pay-row"><span>ලබාදීමට ඇති මුදල්:</span> <span id="op_due" class="balance-red">0.00</span></div>
+                <label style="margin-top:10px;">ගෙවීම් සටහන:</label>
+                <div id="op_log" class="log-list"></div>
+            </div>
         </div>
 
         <div class="emp-card" style="border-left-color: var(--accent);">
-            <div class="emp-title" style="color: var(--accent);">🛠️ Helper (සහායක)</div>
+            <div style="font-weight:bold; font-size:1.1rem; color:var(--accent); margin-bottom:10px;">🛠️ සහායක (Helper)</div>
             <div class="grid">
-                <div>
-                    <label>දිනක පඩිය (Rs)</label>
-                    <input type="number" id="hlp_wage" placeholder="0.00" oninput="calculateEmployeePay()">
-                </div>
-                <div>
-                    <label>වැඩ කළ දින ගණන</label>
-                    <input type="number" id="hlp_days" placeholder="0" oninput="calculateEmployeePay()">
-                </div>
+                <div><label>දිනක පඩිය (Rs)</label><input type="number" id="hlp_wage" oninput="calcEmp()"></div>
+                <div><label>වැඩ කළ දින ගණන</label><input type="number" id="hlp_days" class="auto-field" readonly></div>
+                <div><label>ලබාගත් මුදල්</label><input type="number" id="hlp_pay_input" placeholder="Rs."></div>
             </div>
-            <div class="pay-display" style="color:var(--accent);">මුළු වැටුප: Rs. <span id="hlp_total">0.00</span></div>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <input type="date" id="hlp_date_work" style="width:150px;">
+                <button class="btn btn-green" style="padding:5px 15px; font-size:0.8rem;" onclick="addHelperDay()">වැඩ කළ දිනයක් එක් කරන්න</button>
+                <button class="btn btn-blue" style="padding:5px 15px; font-size:0.8rem;" onclick="addEmpPayment('hlp')">මුදල් ලබාදීම සටහන් කරන්න</button>
+            </div>
+            
+            <div class="pay-box">
+                <div class="pay-row"><span>මුළු උපයන මුදල:</span> <b id="hlp_earned">0.00</b></div>
+                <div class="pay-row"><span>ලබාගත් මුළු මුදල්:</span> <b id="hlp_taken">0.00</b></div>
+                <div class="pay-row"><span>ලබාදීමට ඇති මුදල්:</span> <span id="hlp_due" class="balance-red">0.00</span></div>
+                <label style="margin-top:10px;">වැඩ කළ දින සහ ගෙවීම්:</label>
+                <div id="hlp_log" class="log-list"></div>
+            </div>
         </div>
-        
-        <button class="btn btn-green" onclick="saveEmployeeRates()">වැටුප් විස්තර සුරකින්න</button>
+        <button class="btn btn-green" onclick="saveEmpData()">සියලු දත්ත සුරකින්න</button>
+        <button class="btn btn-red" onclick="resetEmpYear()" style="margin-left:10px;">ගිණුම් Reset කරන්න</button>
     </div>
 
     <div id="view-fuel" class="view-panel">
@@ -171,18 +159,18 @@
         <div class="card">
             <div class="grid">
                 <div><label>දිනය</label><input type="date" id="f_date"></div>
-                <div><label>ලීටරයක මිල</label><input type="number" id="f_per_liter" oninput="calculateFuelLiters()"></div>
-                <div><label>මුළු වියදම</label><input type="number" id="f_cost" oninput="calculateFuelLiters()"></div>
+                <div><label>මිල</label><input type="number" id="f_cost" oninput="calcFuel()"></div>
+                <div><label>ලීටරය</label><input type="number" id="f_per_liter" oninput="calcFuel()"></div>
             </div>
-            <div><label>ලීටර් ගණන (Auto)</label><input type="number" id="f_liters" class="auto-field" readonly></div>
-            <button class="btn btn-blue" style="margin-top:10px" onclick="addFuel()">වියදම ඇතුළත් කරන්න</button>
+            <label>ලීටර්:</label><input type="number" id="f_liters" class="auto-field" readonly>
+            <button class="btn btn-blue" onclick="addFuel()">Add Fuel</button>
         </div>
         <div id="fuel-list"></div>
     </div>
 
     <div id="view-quick" class="view-panel">
         <h3>🔍 Quick Check Overview</h3>
-        <div class="card"><table width="100%" border="1" id="quick-rows" style="border-collapse:collapse; background:white;"></table></div>
+        <div class="card"><table width="100%" border="1" id="quick-rows" style="border-collapse:collapse;"></table></div>
     </div>
 
     <div id="view-totals" class="view-panel">
@@ -194,24 +182,19 @@
         </div>
     </div>
 
-    <div id="view-settings" class="view-panel">
-        <h3>⚙️ Settings</h3>
-        <div class="card">
-            <label>Business Name</label><input type="text" id="s_name" value="අස්වනු නෙලීම්">
-            <br><label>Address/Info</label><input type="text" id="s_info" value="L.B.4 හිගුරක්දමන, හිගුරක්ගොඩ | 077-2843713">
-            <br><button class="btn btn-green" onclick="saveSettings()">Save Settings</button>
-        </div>
-    </div>
-
 </div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('Harvest_V12')) || [];
+    let db = JSON.parse(localStorage.getItem('Harvest_V13')) || [];
     let fuel = JSON.parse(localStorage.getItem('H_Fuel')) || [];
-    let empData = JSON.parse(localStorage.getItem('H_Emp_Rates')) || { opRate: 0, hlpWage: 0, hlpDays: 0 };
+    // Enhanced Employee Data Structure
+    let emp = JSON.parse(localStorage.getItem('H_Emp_V13')) || {
+        opRate: 0, opPayments: [],
+        hlpWage: 0, hlpWorkDays: [], hlpPayments: []
+    };
     
     let activeId = null;
-    let totalBusinessAcres = 0;
+    let globalAcres = 0;
 
     function openNav() { document.getElementById("mySideMenu").style.width = "280px"; }
     function closeNav() { document.getElementById("mySideMenu").style.width = "0"; }
@@ -219,76 +202,118 @@
     function switchView(id) {
         document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        calculateGlobalTotals(); // Update all totals whenever switching views
-        if(id === 'view-quick') showQuickCheck();
-        if(id === 'view-employee') loadEmployeeView();
+        calcGlobal();
+        if(id === 'view-employee') renderEmp();
+        if(id === 'view-quick') showQuick();
         if(id === 'view-fuel') renderFuel();
         closeNav();
     }
 
-    // --- LOGIC: TOTAL CALCULATOR ---
-    function calculateGlobalTotals() {
+    function calcGlobal() {
         let rec = 0, rem = 0, ac = 0;
-        db.forEach(c => c.history.forEach(h => { 
-            rec += h.paid; 
-            rem += ((h.acres * h.rate) + (h.trailers * h.tprice) - h.paid); 
-            ac += h.acres; 
+        db.forEach(c => c.history.forEach(h => {
+            rec += h.paid; rem += ((h.acres*h.rate)+(h.trailers*h.tprice)-h.paid); ac += h.acres;
         }));
-        totalBusinessAcres = ac;
-        // Update Totals View
+        globalAcres = ac;
         if(document.getElementById('t_rec')) {
-            document.getElementById('t_rec').innerText = "Rs. " + rec.toLocaleString();
-            document.getElementById('t_rem').innerText = "Rs. " + rem.toLocaleString();
+            document.getElementById('t_rec').innerText = "Rs. "+rec.toLocaleString();
+            document.getElementById('t_rem').innerText = "Rs. "+rem.toLocaleString();
             document.getElementById('t_acre').innerText = ac.toFixed(2);
         }
     }
 
-    // --- LOGIC: EMPLOYEE ---
-    function loadEmployeeView() {
-        document.getElementById('op_rate').value = empData.opRate || '';
-        document.getElementById('hlp_wage').value = empData.hlpWage || '';
-        document.getElementById('hlp_days').value = empData.hlpDays || '';
-        document.getElementById('op_work').value = totalBusinessAcres.toFixed(2);
-        calculateEmployeePay();
+    // --- EMPLOYEE LOGIC ---
+    function renderEmp() {
+        document.getElementById('op_rate').value = emp.opRate || '';
+        document.getElementById('op_work').value = globalAcres.toFixed(2);
+        document.getElementById('hlp_wage').value = emp.hlpWage || '';
+        document.getElementById('hlp_days').value = emp.hlpWorkDays.length;
+        
+        // Render Logs
+        const oLog = document.getElementById('op_log'); oLog.innerHTML = '';
+        let totalOpPaid = 0;
+        emp.opPayments.forEach((p, i) => {
+            totalOpPaid += p.amt;
+            oLog.innerHTML += `<div class="log-item"><span>${p.date}</span><b>Rs. ${p.amt.toLocaleString()}</b> <button onclick="delPay('op', ${i})" style="color:red; border:none; background:none; cursor:pointer;">×</button></div>`;
+        });
+
+        const hLog = document.getElementById('hlp_log'); hLog.innerHTML = '';
+        let totalHlpPaid = 0;
+        emp.hlpWorkDays.forEach(d => hLog.innerHTML += `<div class="log-item" style="color:green;"><span>${d} (වැඩ කළ දිනය)</span><b>Day</b></div>`);
+        emp.hlpPayments.forEach((p, i) => {
+            totalHlpPaid += p.amt;
+            hLog.innerHTML += `<div class="log-item"><span>${p.date}</span><b>Rs. ${p.amt.toLocaleString()}</b> <button onclick="delPay('hlp', ${i})" style="color:red; border:none; background:none; cursor:pointer;">×</button></div>`;
+        });
+
+        calcEmp(totalOpPaid, totalHlpPaid);
     }
 
-    function calculateEmployeePay() {
+    function calcEmp(paidOp = 0, paidHlp = 0) {
+        if(paidOp === 0) emp.opPayments.forEach(p => paidOp += p.amt);
+        if(paidHlp === 0) emp.hlpPayments.forEach(p => paidHlp += p.amt);
+
         const opRate = parseFloat(document.getElementById('op_rate').value) || 0;
+        const opEarned = opRate * globalAcres;
+        document.getElementById('op_earned').innerText = opEarned.toLocaleString();
+        document.getElementById('op_taken').innerText = paidOp.toLocaleString();
+        document.getElementById('op_due').innerText = (opEarned - paidOp).toLocaleString();
+
         const hlpWage = parseFloat(document.getElementById('hlp_wage').value) || 0;
-        const hlpDays = parseFloat(document.getElementById('hlp_days').value) || 0;
-
-        const opTotal = opRate * totalBusinessAcres;
-        const hlpTotal = hlpWage * hlpDays;
-
-        document.getElementById('op_total').innerText = opTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
-        document.getElementById('hlp_total').innerText = hlpTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+        const hlpEarned = hlpWage * emp.hlpWorkDays.length;
+        document.getElementById('hlp_earned').innerText = hlpEarned.toLocaleString();
+        document.getElementById('hlp_taken').innerText = paidHlp.toLocaleString();
+        document.getElementById('hlp_due').innerText = (hlpEarned - paidHlp).toLocaleString();
     }
 
-    function saveEmployeeRates() {
-        empData = {
-            opRate: parseFloat(document.getElementById('op_rate').value) || 0,
-            hlpWage: parseFloat(document.getElementById('hlp_wage').value) || 0,
-            hlpDays: parseFloat(document.getElementById('hlp_days').value) || 0
-        };
-        localStorage.setItem('H_Emp_Rates', JSON.stringify(empData));
-        alert("වැටුප් විස්තර සාර්ථකව සුරකින ලදී!");
+    function addEmpPayment(type) {
+        const amt = parseFloat(document.getElementById(type + '_pay_input').value);
+        if(!amt) return;
+        const p = { date: new Date().toLocaleDateString(), amt: amt };
+        if(type === 'op') emp.opPayments.push(p); else emp.hlpPayments.push(p);
+        document.getElementById(type + '_pay_input').value = '';
+        saveEmpData(); renderEmp();
     }
 
-    // --- LOGIC: LEDGER ---
+    function addHelperDay() {
+        const d = document.getElementById('hlp_date_work').value;
+        if(!d) return alert("Select Date");
+        if(emp.hlpWorkDays.includes(d)) return alert("Already added!");
+        emp.hlpWorkDays.push(d);
+        saveEmpData(); renderEmp();
+    }
+
+    function delPay(type, i) {
+        if(type === 'op') emp.opPayments.splice(i, 1); else emp.hlpPayments.splice(i, 1);
+        saveEmpData(); renderEmp();
+    }
+
+    function saveEmpData() {
+        emp.opRate = parseFloat(document.getElementById('op_rate').value) || 0;
+        emp.hlpWage = parseFloat(document.getElementById('hlp_wage').value) || 0;
+        localStorage.setItem('H_Emp_V13', JSON.stringify(emp));
+    }
+
+    function resetEmpYear() {
+        if(confirm("Are you sure you want to clear all employee payment history?")) {
+            emp.opPayments = []; emp.hlpWorkDays = []; emp.hlpPayments = [];
+            saveEmpData(); renderEmp();
+        }
+    }
+
+    // --- LEDGER LOGIC ---
     function render() {
         const l = document.getElementById('list'); l.innerHTML = '';
         db.forEach((c, index) => {
             const d = document.createElement('div');
             d.className = `cust-item ${activeId === c.id ? 'active' : ''}`;
-            d.innerHTML = `<div><span style="color:#888; font-weight:bold;">(${db.length - index})</span> ${c.name}</div>`;
+            d.innerHTML = `<div><span>(${db.length - index})</span> ${c.name}</div>`;
             d.onclick = () => load(c.id, `(${db.length - index})`);
             l.appendChild(d);
         });
     }
 
     function load(id, visualNo) {
-        activeId = id;
-        const c = db.find(x => x.id === id); if(!c) return;
+        activeId = id; const c = db.find(x => x.id === id); if(!c) return;
         ['name','phone','city'].forEach(k => document.getElementById(k).value = c[k]);
         document.getElementById('d_no').innerText = visualNo;
         showTable(); render();
@@ -296,17 +321,15 @@
 
     function showTable() {
         const c = db.find(x => x.id === activeId);
-        if(!c) { document.getElementById('rows').innerHTML = ''; document.getElementById('total').innerText = "Rs. 0.00"; return; }
+        if(!c) { document.getElementById('rows').innerHTML = ''; document.getElementById('total').innerText = "0"; return; }
         document.getElementById('d_name').innerText = c.name;
-        document.getElementById('d_city').innerText = c.city;
         const tb = document.getElementById('rows'); tb.innerHTML = '';
         let bal = 0;
-        c.history.forEach((h, i) => {
-            let sub = (h.acres * h.rate) + (h.trailers * h.tprice);
-            let due = sub - h.paid; bal += due;
-            tb.innerHTML += `<tr><td><b>${h.date}</b><br>${h.acres}ac, ${h.trailers}T</td><td align="right">${sub.toLocaleString()}<br><small style="color:red">Due: ${due.toLocaleString()}</small></td></tr>`;
+        c.history.forEach(h => {
+            let sub = (h.acres*h.rate)+(h.trailers*h.tprice); let due = sub-h.paid; bal += due;
+            tb.innerHTML += `<tr><td>${h.date}<br>${h.acres}ac, ${h.trailers}T</td><td align="right">Rs. ${sub.toLocaleString()}<br><small style="color:red">Due: ${due}</small></td></tr>`;
         });
-        document.getElementById('total').innerText = "Rs. " + bal.toLocaleString();
+        document.getElementById('total').innerText = bal.toLocaleString();
     }
 
     function addEntry() {
@@ -318,57 +341,52 @@
             tprice: parseFloat(document.getElementById('tprice').value)||0, 
             paid: parseFloat(document.getElementById('paid').value)||0 
         };
-        if(!h.date || !activeId) return alert("Select Customer & Date");
+        if(!h.date || !activeId) return;
         db.find(x => x.id === activeId).history.push(h);
-        save(); calculateGlobalTotals(); load(activeId, document.getElementById('d_no').innerText);
+        save(); calcGlobal(); load(activeId, document.getElementById('d_no').innerText);
         ['date','acres','rate','trailers','tprice','paid'].forEach(i => document.getElementById(i).value = '');
     }
 
-    // --- LOGIC: QUICK CHECK ---
-    function showQuickCheck() {
+    function showQuick() {
         const tb = document.getElementById('quick-rows');
-        tb.innerHTML = '<thead><tr style="background:#eee;"><th>#</th><th>නම</th><th>දුරකථන</th><th align="right">හිඟය (Rs)</th></tr></thead>';
+        tb.innerHTML = '<thead><tr style="background:#eee;"><th>#</th><th>නම</th><th>දුරකථන</th><th align="right">හිඟය</th></tr></thead>';
         let total = 0;
         db.forEach((c, idx) => {
-            let due = c.history.reduce((s, h) => s + ((h.acres * h.rate) + (h.trailers * h.tprice) - h.paid), 0);
+            let due = c.history.reduce((s, h) => s + ((h.acres*h.rate)+(h.trailers*h.tprice)-h.paid), 0);
             if(due > 0) {
                 total += due;
-                tb.innerHTML += `<tr><td>(${db.length - idx})</td><td>${c.name}</td><td>${c.phone || '-'}</td><td align="right" style="color:red; font-weight:bold;">${due.toLocaleString()}</td></tr>`;
+                tb.innerHTML += `<tr><td>(${db.length-idx})</td><td>${c.name}</td><td>${c.phone||'-'}</td><td align="right"><b>${due.toLocaleString()}</b></td></tr>`;
             }
         });
-        tb.innerHTML += `<tr style="background:#fff3e0; border-top:2px solid #333;"><td colspan="3" style="font-weight:bold; text-align:center;">මුළු හිඟ මුදල</td><td align="right" style="color:red; font-weight:bold;">${total.toLocaleString()}</td></tr>`;
+        tb.innerHTML += `<tr style="background:#fff3e0;"><td colspan="3" align="center"><b>Total</b></td><td align="right" style="color:red; font-weight:bold;">${total.toLocaleString()}</td></tr>`;
     }
 
-    // --- LOGIC: FUEL ---
-    function calculateFuelLiters() {
-        const cost = parseFloat(document.getElementById('f_cost').value)||0;
-        const ppl = parseFloat(document.getElementById('f_per_liter').value)||0;
-        document.getElementById('f_liters').value = (cost > 0 && ppl > 0) ? (cost/ppl).toFixed(2) : '';
+    function calcFuel() {
+        const c = parseFloat(document.getElementById('f_cost').value)||0;
+        const p = parseFloat(document.getElementById('f_per_liter').value)||0;
+        document.getElementById('f_liters').value = (c>0 && p>0) ? (c/p).toFixed(2) : '';
     }
 
     function addFuel() {
-        const f = { d: document.getElementById('f_date').value, l: parseFloat(document.getElementById('f_liters').value)||0, c: parseFloat(document.getElementById('f_cost').value)||0 };
-        if(!f.d || f.l <= 0) return alert("Enter valid fuel details");
-        fuel.push(f); localStorage.setItem('H_Fuel', JSON.stringify(fuel)); renderFuel();
-        ['f_date','f_liters','f_cost','f_per_liter'].forEach(i => document.getElementById(i).value = '');
+        const f = { d: document.getElementById('f_date').value, l: document.getElementById('f_liters').value, c: document.getElementById('f_cost').value };
+        if(!f.d) return; fuel.push(f); localStorage.setItem('H_Fuel', JSON.stringify(fuel)); renderFuel();
     }
 
     function renderFuel() {
         const div = document.getElementById('fuel-list'); div.innerHTML = '';
-        fuel.forEach((f, i) => {
-            div.innerHTML += `<div class="entry-list-item"><span><b>${f.d}</b> - ${f.l}L</span><span>Rs. ${f.c.toLocaleString()} <button class="btn-red" onclick="delFuel(${i})">×</button></span></div>`;
-        });
+        fuel.forEach((f, i) => { div.innerHTML += `<div>${f.d} - ${f.l}L (Rs. ${f.c}) <button onclick="delFuel(${i})">×</button></div>`; });
     }
-    function delFuel(i) { fuel.splice(i,1); localStorage.setItem('H_Fuel', JSON.stringify(fuel)); renderFuel(); }
 
-    function save() { localStorage.setItem('Harvest_V12', JSON.stringify(db)); }
-    function saveProfile() { const c = db.find(x => x.id === activeId); if(!c) return; c.name = document.getElementById('name').value; c.phone = document.getElementById('phone').value; c.city = document.getElementById('city').value; save(); render(); showTable(); alert("Profile Saved!"); }
-    function deleteCustomerProfile() { if(confirm("Are you sure?")) { db = db.filter(x => x.id !== activeId); save(); calculateGlobalTotals(); activeId = null; render(); showTable(); } }
-    function addCustomer() { const id = Date.now(); db.unshift({ id, name: "නව පාරිභෝගිකයා", phone: "", city: "", history: [] }); save(); render(); load(id, `(${db.length})`); }
+    function save() { localStorage.setItem('Harvest_V13', JSON.stringify(db)); }
+    function saveProfile() { 
+        const c = db.find(x => x.id === activeId); if(!c) return;
+        c.name = document.getElementById('name').value; c.phone = document.getElementById('phone').value; c.city = document.getElementById('city').value;
+        save(); render(); showTable(); alert("Saved!");
+    }
+    function addCustomer() { const id = Date.now(); db.unshift({ id, name: "New", history: [] }); save(); render(); load(id, `(${db.length})`); }
     function search() { let t = document.getElementById('find').value.toLowerCase(); document.querySelectorAll('.cust-item').forEach(i => i.style.display = i.innerText.toLowerCase().includes(t) ? 'flex' : 'none'); }
-    function saveSettings() { document.getElementById('b_name').innerText = document.getElementById('s_name').value; document.getElementById('b_info').innerText = document.getElementById('s_info').value; alert("Settings Saved!"); }
 
-    calculateGlobalTotals();
+    calcGlobal();
     render();
 </script>
 
