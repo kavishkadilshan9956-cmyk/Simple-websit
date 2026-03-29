@@ -3,46 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master POS V14 - Fixed</title>
+    <title>අස්වනු නෙලීම් - Master POS V14</title>
     <style>
         :root { --primary: #1b5e20; --secondary: #0d47a1; --bg: #f4f7f6; --accent: #e65100; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
+        /* Layout */
         .side-menu { width: 0; position: fixed; z-index: 1000; height: 100%; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.4s; padding-top: 60px; }
         .side-menu a { padding: 15px 25px; text-decoration: none; font-size: 18px; color: #818181; display: block; transition: 0.3s; cursor: pointer; }
         .side-menu a:hover { color: #f1f1f1; background: #222; }
-        
-        .sidebar { width: 320px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-header { padding: 15px; background: var(--primary); color: white; display: flex; align-items: center; justify-content: space-between; }
-        
-        .customer-list { flex: 1; overflow-y: auto; background: #fff; }
-        .cust-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
-        .cust-item:hover { background: #f9f9f9; }
+        .sidebar { width: 320px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 15px; background: var(--primary); color: white; display: flex; align-items: center; gap: 10px; }
+        .customer-list { flex: 1; overflow-y: auto; }
+        .cust-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; }
         .cust-item.active { background: #e8f5e9; border-left: 5px solid var(--primary); font-weight: bold; }
 
         .main-content { flex: 1; padding: 20px; overflow-y: auto; background: white; }
         .view-panel { display: none; }
         .view-panel.active { display: block; }
 
+        /* UI Cards & Forms */
         .card { background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 10px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
         label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
-        
-        .btn { padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
+        .btn { padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
         .btn-green { background: var(--primary); }
         .btn-blue { background: var(--secondary); }
         .btn-red { background: #d32f2f; }
         
-        #receipt-box { width: 80mm; margin: 20px auto; padding: 10px; border: 1px solid #ddd; background: #fff; font-family: monospace; }
-        .r-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .r-table th { text-align: left; border-bottom: 1px solid #000; }
+        /* Stats Box */
+        .stats-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .stat-card { flex: 1; padding: 15px; border-radius: 8px; color: white; text-align: center; }
         
+        /* Receipt Styles (Printing) */
+        #receipt-box { width: 80mm; margin: auto; padding: 5px; background: white; border: 1px solid #eee; }
+        .receipt-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+        .r-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .r-table td { padding: 5px 0; border-bottom: 1px dotted #ccc; }
+
         @media print {
-            .sidebar, .side-menu, .btn, .print-hide, .card { display: none !important; }
-            body { background: white; }
-            .main-content { padding: 0; margin: 0; }
-            #receipt-box { border: none; width: 100%; margin: 0; }
+            body { background: white; display: block; }
+            .sidebar, .side-menu, .btn, .print-hide, .card, h3 { display: none !important; }
+            .main-content { padding: 0; margin: 0; width: 80mm; }
+            #receipt-box { border: none; width: 80mm; padding: 0; }
+            @page { margin: 0; }
         }
     </style>
 </head>
@@ -50,24 +55,19 @@
 
 <div id="mySideMenu" class="side-menu">
     <a onclick="switchView('view-main')">🚜 Ledger (බිල්පත)</a>
-    <a onclick="switchView('view-quick')">🔍 Quick Overview</a>
+    <a onclick="switchView('view-quick')">🔍 Quick Check Overview</a>
     <a onclick="switchView('view-fuel')">⛽ Fuel Tracker</a>
-    <a onclick="switchView('view-employee')">👥 Employees</a>
+    <a onclick="switchView('view-employee')">👥 Employees (සේවක වැටුප්)</a>
     <a onclick="switchView('view-totals')">💰 Overall Totals</a>
-    <hr style="border-color: #333;">
-    <a onclick="hardReset()" style="color: #ff5252; font-size: 14px;">⚠️ Reset All Data</a>
-    <a onclick="closeNav()" style="color:white; text-align:center;">Close ×</a>
 </div>
 
 <div class="sidebar print-hide">
     <div class="sidebar-header">
-        <span style="cursor:pointer; font-size: 24px;" onclick="openNav()">&#9776;</span>
-        <span style="font-weight:bold;">Master POS V14</span>
-        <button onclick="addCustomer()" style="cursor:pointer; background:white; color:green; border:none; border-radius:50%; width:30px; height:30px; font-weight:bold;">+</button>
+        <span style="cursor:pointer;" onclick="openNav()">&#9776;</span>
+        <span style="font-weight:bold;">අස්වනු නෙලීම් V14</span>
+        <button onclick="addCustomer()" style="margin-left:auto; border:none; background:white; color:green; border-radius:50%; width:28px; height:28px; font-weight:bold;">+</button>
     </div>
-    <div style="padding:10px;">
-        <input type="text" id="find" placeholder="Search customer..." onkeyup="search()">
-    </div>
+    <div style="padding:10px;"><input type="text" id="find" placeholder="Search..." onkeyup="search()" style="border-radius:20px;"></div>
     <div class="customer-list" id="list"></div>
 </div>
 
@@ -75,7 +75,6 @@
     
     <div id="view-main" class="view-panel active">
         <div class="card print-hide">
-            <h4 id="editing-title">Select or Add a Customer</h4>
             <div class="grid">
                 <div><label>නම</label><input type="text" id="name"></div>
                 <div><label>දුරකථන</label><input type="text" id="phone"></div>
@@ -92,191 +91,267 @@
                 <div><label>ගෙවූ මුදල්</label><input type="number" id="paid"></div>
             </div>
             <div style="display:flex; gap:10px; flex-wrap: wrap;">
-                <button class="btn btn-green" onclick="saveProfile()">Save Profile</button>
-                <button class="btn btn-blue" onclick="addEntry()">Add Entry</button>
-                <button class="btn" style="background:#333;" onclick="window.print()">Print</button>
+                <button class="btn btn-green" onclick="saveProfile()">Profile සුරකින්න</button>
+                <button class="btn btn-blue" onclick="addEntry()">+ දත්ත ඇතුළත් කරන්න</button>
+                <button class="btn" style="background:#333;" onclick="window.print()">Print Receipt</button>
                 <button class="btn btn-red" onclick="deleteCustomer()">Delete</button>
             </div>
         </div>
 
         <div id="receipt-box">
-            <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:5px;">
-                <h3 style="margin:0;">අස්වනු නෙලීම්</h3>
-                <small>L.B.4 හිගුරක්දමන | 077-2843713</small>
+            <div class="receipt-header">
+                <h2 style="margin:5px 0;">අස්වනු නෙලීම්</h2>
+                <p style="font-size:12px; margin:2px;">L.B.4 හිගුරක්දමන | 077-2843713</p>
             </div>
-            <p style="font-size:12px;">
-                Customer: <b id="r_name">---</b><br>
-                Date: <span id="r_date"></span>
-            </p>
+            <div style="font-size:13px; margin-bottom:10px; line-height: 1.5;">
+                නම: <b id="d_name"></b><br>
+                අංකය: <b id="d_no"></b> | දිනය: <b id="d_date"></b>
+            </div>
             <table class="r-table">
-                <thead><tr><th>Description</th><th style="text-align:right;">Amount</th></tr></thead>
-                <tbody id="r_rows"></tbody>
+                <thead><tr style="text-align:left; border-bottom:1px solid #000;"><th>විස්තරය</th><th align="right">මුදල (Rs)</th></tr></thead>
+                <tbody id="rows"></tbody>
             </table>
-            <div style="text-align:right; margin-top:10px; border-top:1px solid #000;">
-                Total Due: <h2 style="margin:0;" id="r_total">0.00</h2>
+            <div style="text-align:right; margin-top:15px; border-top:2px solid #000; padding-top:5px;">
+                <span style="font-size:14px;">ගෙවීමට ඇති මුළු මුදල:</span><br>
+                <b style="font-size:22px;">Rs. <span id="total">0</span></b>
+            </div>
+            <center style="margin-top:20px; font-size:10px; color:#888;">ස්තූතියි! නැවත එන්න.</center>
+        </div>
+    </div>
+
+    <div id="view-fuel" class="view-panel">
+        <h3>⛽ Fuel Tracker & Auto-Calculator</h3>
+        <div class="stats-row">
+            <div class="stat-card" style="background:var(--accent);">Total Liters: <h2 id="fuel_total_l">0 L</h2></div>
+            <div class="stat-card" style="background:var(--secondary);">Total Cost: <h2 id="fuel_total_c">Rs. 0</h2></div>
+        </div>
+        <div class="card">
+            <div class="grid">
+                <div><label>දිනය</label><input type="date" id="f_date"></div>
+                <div><label>මුළු වියදම (Rs)</label><input type="number" id="f_cost" oninput="calcFuelL()"></div>
+                <div><label>ලීටර් මිල (Rs)</label><input type="number" id="f_ppl" oninput="calcFuelL()"></div>
+            </div>
+            <div><label>ලීටර් ප්‍රමාණය (Auto)</label><input type="number" id="f_liters" readonly style="background:#eee;"></div>
+            <button class="btn btn-blue" style="margin-top:10px;" onclick="addFuel()">වියදම ඇතුළත් කරන්න</button>
+        </div>
+        <div id="fuel_list_render"></div>
+    </div>
+
+    <div id="view-employee" class="view-panel">
+        <h3>👥 Employees Payments</h3>
+        <div class="card" style="border-left:8px solid var(--secondary);">
+            <b>🚜 Machine Operator</b>
+            <div class="grid" style="margin-top:10px;">
+                <div><label>අක්කරයකට (Rs)</label><input type="number" id="op_rate" oninput="calcEmp()"></div>
+                <div><label>මුළු අක්කර</label><input type="number" id="op_work" readonly style="background:#eee;"></div>
+                <div><label>ගෙවූ මුදල (Rs)</label><input type="number" id="op_paid_in"></div>
+            </div>
+            <button class="btn btn-blue" onclick="addEmpPay('op')">මුදල් ලබාදීම</button>
+            <div style="background:#f9f9f9; padding:10px; margin-top:10px; border-radius:5px;">
+                උපයා ඇති මුළු මුදල: <b>Rs. <span id="op_earned">0</span></b> | 
+                හිඟ මුදල: <b style="color:red;">Rs. <span id="op_due">0</span></b>
+            </div>
+        </div>
+        <div class="card" style="border-left:8px solid var(--accent);">
+            <b>🛠️ Helper</b>
+            <div class="grid" style="margin-top:10px;">
+                <div><label>දිනක පඩිය (Rs)</label><input type="number" id="hlp_rate" oninput="calcEmp()"></div>
+                <div><label>වැඩ කළ දින</label><input type="number" id="hlp_days" readonly style="background:#eee;"></div>
+                <div><label>ගෙවූ මුදල (Rs)</label><input type="number" id="hlp_paid_in"></div>
+            </div>
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <input type="date" id="hlp_date" style="width:150px;">
+                <button class="btn btn-green" onclick="addHlpDay()">වැඩ කළ දිනයක් එක් කරන්න</button>
+                <button class="btn btn-blue" onclick="addEmpPay('hlp')">මුදල් ලබාදීම</button>
+            </div>
+            <div style="background:#f9f9f9; padding:10px; border-radius:5px;">
+                උපයා ඇති මුළු මුදල: <b>Rs. <span id="hlp_earned">0</span></b> | 
+                හිඟ මුදල: <b style="color:red;">Rs. <span id="hlp_due">0</span></b>
             </div>
         </div>
     </div>
 
-    <div id="view-fuel" class="view-panel"><h3>⛽ Fuel Tracker</h3><div id="fuel-content"></div></div>
-    <div id="view-employee" class="view-panel"><h3>👥 Employee Management</h3><div id="emp-content"></div></div>
-    <div id="view-quick" class="view-panel"><h3>🔍 Quick Overview</h3><div id="quick-content"></div></div>
-    <div id="view-totals" class="view-panel"><h3>💰 Overall Totals</h3><div id="totals-content"></div></div>
+    <div id="view-quick" class="view-panel">
+        <h3>🔍 Quick Check Overview</h3>
+        <table width="100%" border="1" id="quick-table" style="border-collapse:collapse; background:white;"></table>
+    </div>
 
+    <div id="view-totals" class="view-panel">
+        <h3>💰 Overall Business Totals</h3>
+        <div class="grid">
+            <div class="card" style="background:#e8f5e9;"><h4>Received</h4><h2 id="t_rec">0</h2></div>
+            <div class="card" style="background:#ffebee;"><h4>Remaining</h4><h2 id="t_rem">0</h2></div>
+            <div class="card" style="background:#e3f2fd;"><h4>Total Acres</h4><h2 id="t_acre">0</h2></div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // --- DATA INITIALIZATION & REPAIR ---
-    let db = [];
-    try {
-        db = JSON.parse(localStorage.getItem('Harvest_V14')) || [];
-        // Migration: Ensure history exists for every record
-        db.forEach(item => { if(!item.history) item.history = []; });
-    } catch(e) {
-        console.error("Data corrupted, resetting.");
-        db = [];
-    }
-
+    let db = JSON.parse(localStorage.getItem('Harvest_V14')) || [];
+    let fuel = JSON.parse(localStorage.getItem('Fuel_V14')) || [];
+    let emp = JSON.parse(localStorage.getItem('Emp_V14')) || { opR:0, opP:[], hlR:0, hlD:[], hlP:[] };
     let activeId = null;
 
-    // --- NAVIGATION ---
     function openNav() { document.getElementById("mySideMenu").style.width = "260px"; }
     function closeNav() { document.getElementById("mySideMenu").style.width = "0"; }
     
-    function switchView(viewId) {
-        document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
-        if(viewId === 'view-totals') renderTotals();
+    function switchView(id) {
+        document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        updateGlobalStats();
+        if(id === 'view-fuel') renderFuel();
+        if(id === 'view-employee') renderEmp();
+        if(id === 'view-quick') renderQuick();
         closeNav();
     }
 
-    // --- CUSTOMER LOGIC ---
-    function renderList() {
-        const listDiv = document.getElementById('list');
-        listDiv.innerHTML = '';
-        db.forEach(cust => {
-            const item = document.createElement('div');
-            item.className = `cust-item ${activeId === cust.id ? 'active' : ''}`;
-            item.innerHTML = `<div>${cust.name || 'Unknown'}</div><small>${cust.phone || ''}</small>`;
-            item.onclick = () => selectCustomer(cust.id);
-            listDiv.appendChild(item);
+    function updateGlobalStats() {
+        let rec = 0, rem = 0, ac = 0;
+        db.forEach(c => c.history.forEach(h => {
+            rec += h.paid; rem += ((h.acres*h.rate)+(h.trailers*h.tprice)-h.paid); ac += h.acres;
+        }));
+        if(document.getElementById('t_rec')) {
+            document.getElementById('t_rec').innerText = "Rs. "+rec.toLocaleString();
+            document.getElementById('t_rem').innerText = "Rs. "+rem.toLocaleString();
+            document.getElementById('t_acre').innerText = ac.toFixed(2);
+        }
+        return ac;
+    }
+
+    function calcFuelL() {
+        const cost = parseFloat(document.getElementById('f_cost').value)||0;
+        const ppl = parseFloat(document.getElementById('f_ppl').value)||0;
+        document.getElementById('f_liters').value = (cost/ppl).toFixed(2);
+    }
+    function addFuel() {
+        const cost = parseFloat(document.getElementById('f_cost').value)||0;
+        const liters = parseFloat(document.getElementById('f_liters').value)||0;
+        if(cost <= 0) return alert("Enter Amount");
+        fuel.push({ date: document.getElementById('f_date').value, cost, liters });
+        localStorage.setItem('Fuel_V14', JSON.stringify(fuel));
+        renderFuel();
+    }
+    function renderFuel() {
+        const list = document.getElementById('fuel_list_render'); list.innerHTML = '';
+        let tc = 0, tl = 0;
+        fuel.forEach((f, i) => {
+            tc += f.cost; tl += f.liters;
+            list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; padding:10px;">
+                <span>${f.date} | ${f.liters} L</span><b>Rs. ${f.cost}</b>
+                <button onclick="delFuel(${i})" style="color:red; background:none; border:none; cursor:pointer;">×</button></div>`;
         });
+        document.getElementById('fuel_total_l').innerText = tl.toFixed(2) + " L";
+        document.getElementById('fuel_total_c').innerText = "Rs. " + tc.toLocaleString();
+    }
+    function delFuel(i) { fuel.splice(i, 1); localStorage.setItem('Fuel_V14', JSON.stringify(fuel)); renderFuel(); }
+
+    function renderEmp() {
+        const ac = updateGlobalStats();
+        document.getElementById('op_rate').value = emp.opR;
+        document.getElementById('op_work').value = ac.toFixed(2);
+        document.getElementById('hlp_rate').value = emp.hlR;
+        document.getElementById('hlp_days').value = emp.hlD.length;
+        calcEmp();
+    }
+    function calcEmp() {
+        emp.opR = parseFloat(document.getElementById('op_rate').value)||0;
+        emp.hlR = parseFloat(document.getElementById('hlp_rate').value)||0;
+        const earnedOp = emp.opR * updateGlobalStats();
+        const paidOp = emp.opP.reduce((s,p)=>s+p.amt, 0);
+        document.getElementById('op_earned').innerText = earnedOp.toLocaleString();
+        document.getElementById('op_due').innerText = (earnedOp - paidOp).toLocaleString();
+        const earnedHl = emp.hlR * emp.hlD.length;
+        const paidHl = emp.hlP.reduce((s,p)=>s+p.amt, 0);
+        document.getElementById('hlp_earned').innerText = earnedHl.toLocaleString();
+        document.getElementById('hlp_due').innerText = (earnedHl - paidHl).toLocaleString();
+        localStorage.setItem('Emp_V14', JSON.stringify(emp));
+    }
+    function addHlpDay() {
+        const d = document.getElementById('hlp_date').value;
+        if(!d || emp.hlD.includes(d)) return alert("Invalid or duplicate date");
+        emp.hlD.push(d); renderEmp();
+    }
+    function addEmpPay(type) {
+        const amt = parseFloat(document.getElementById(type+'_paid_in').value)||0;
+        if(amt <= 0) return;
+        if(type==='op') emp.opP.push({amt}); else emp.hlP.push({amt});
+        document.getElementById(type+'_paid_in').value = '';
+        renderEmp();
     }
 
     function addCustomer() {
-        const newCust = { id: Date.now(), name: "New Customer", phone: "", city: "", history: [] };
-        db.unshift(newCust);
-        save();
-        selectCustomer(newCust.id);
+        const id = Date.now();
+        db.unshift({ id, name: "New Customer", phone: "", city: "", history: [] });
+        save(); renderList(); load(id);
+    }
+    function renderList() {
+        const l = document.getElementById('list'); l.innerHTML = '';
+        db.forEach((c, index) => {
+            const visualNo = db.length - index;
+            const d = document.createElement('div');
+            d.className = `cust-item ${activeId === c.id ? 'active' : ''}`;
+            d.innerHTML = `<span>(${visualNo}) ${c.name}</span><small>${c.phone}</small>`;
+            d.onclick = () => load(c.id);
+            l.appendChild(d);
+        });
     }
 
-    function selectCustomer(id) {
-        activeId = id;
-        const cust = db.find(c => c.id === id);
-        if(!cust) return;
-
-        document.getElementById('name').value = cust.name;
-        document.getElementById('phone').value = cust.phone;
-        document.getElementById('city').value = cust.city;
-        document.getElementById('editing-title').innerText = "Editing: " + cust.name;
+    // FIXED: Load function now correctly updates Date and ID
+    function load(id) {
+        activeId = id; 
+        const c = db.find(x => x.id === id); 
+        if(!c) return;
         
-        renderReceipt();
+        // Find index for visual number
+        const visualNo = db.length - db.findIndex(x => x.id === id);
+        
+        ['name','phone','city'].forEach(k => document.getElementById(k).value = c[k]);
+        document.getElementById('d_no').innerText = "#" + visualNo;
+        
+        // Update Date in Receipt to today's date automatically
+        document.getElementById('d_date').innerText = new Date().toLocaleDateString();
+        
+        showTable(); 
         renderList();
     }
 
-    function saveProfile() {
-        if(!activeId) return alert("Please select a customer first.");
-        const cust = db.find(c => c.id === activeId);
-        cust.name = document.getElementById('name').value;
-        cust.phone = document.getElementById('phone').value;
-        cust.city = document.getElementById('city').value;
-        save();
-        renderList();
-        alert("Profile Updated!");
+    function showTable() {
+        const c = db.find(x => x.id === activeId); if(!c) return;
+        document.getElementById('d_name').innerText = c.name;
+        const tb = document.getElementById('rows'); tb.innerHTML = '';
+        let bal = 0;
+        c.history.forEach(h => {
+            let sub = (h.acres*h.rate)+(h.trailers*h.tprice); 
+            let due = sub-h.paid; bal += due;
+            tb.innerHTML += `<tr><td>${h.date}<br>${h.acres} ac × ${h.rate}</td><td align="right"><b>${sub.toLocaleString()}</b></td></tr>`;
+        });
+        document.getElementById('total').innerText = bal.toLocaleString();
     }
-
     function addEntry() {
-        if(!activeId) return alert("Select a customer first!");
-        const date = document.getElementById('date').value;
-        if(!date) return alert("Please select a date.");
-
-        const entry = {
-            date: date,
-            acres: parseFloat(document.getElementById('acres').value) || 0,
-            rate: parseFloat(document.getElementById('rate').value) || 0,
-            trailers: parseFloat(document.getElementById('trailers').value) || 0,
-            tprice: parseFloat(document.getElementById('tprice').value) || 0,
-            paid: parseFloat(document.getElementById('paid').value) || 0
-        };
-
-        const cust = db.find(c => c.id === activeId);
-        cust.history.push(entry);
-        save();
-        renderReceipt();
-        // Clear inputs
-        ['acres','rate','trailers','tprice','paid'].forEach(id => document.getElementById(id).value = '');
+        const h = { date: document.getElementById('date').value, acres: parseFloat(document.getElementById('acres').value)||0, rate: parseFloat(document.getElementById('rate').value)||0, trailers: parseFloat(document.getElementById('trailers').value)||0, tprice: parseFloat(document.getElementById('tprice').value)||0, paid: parseFloat(document.getElementById('paid').value)||0 };
+        if(!h.date || !activeId) return alert("Select Date & Customer");
+        db.find(x => x.id === activeId).history.push(h);
+        save(); load(activeId);
     }
-
-    function renderReceipt() {
-        const cust = db.find(c => c.id === activeId);
-        if(!cust) return;
-
-        document.getElementById('r_name').innerText = cust.name;
-        document.getElementById('r_date').innerText = new Date().toLocaleDateString();
-        
-        const rows = document.getElementById('r_rows');
-        rows.innerHTML = '';
-        let grandTotal = 0;
-
-        cust.history.forEach(h => {
-            const cost = (h.acres * h.rate) + (h.trailers * h.tprice);
-            const balance = cost - h.paid;
-            grandTotal += balance;
-
-            rows.innerHTML += `<tr>
-                <td>${h.date}<br><small>${h.acres}ac @ ${h.rate}</small></td>
-                <td style="text-align:right;">${cost.toFixed(2)}</td>
-            </tr>`;
+    function renderQuick() {
+        const tb = document.getElementById('quick-table');
+        tb.innerHTML = '<tr style="background:#eee;"><th>#</th><th>පාරිභෝගිකයා</th><th>දුරකථන</th><th>හිඟ මුදල</th></tr>';
+        db.forEach((c, idx) => {
+            let due = c.history.reduce((s, h) => s + ((h.acres*h.rate)+(h.trailers*h.tprice)-h.paid), 0);
+            if(due > 0) tb.innerHTML += `<tr><td>(${db.length-idx})</td><td>${c.name}</td><td>${c.phone}</td><td align="right"><b>${due.toLocaleString()}</b></td></tr>`;
         });
-
-        document.getElementById('r_total').innerText = grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
     }
-
-    function deleteCustomer() {
-        if(!activeId) return;
-        if(confirm("Are you sure you want to delete this customer?")) {
-            db = db.filter(c => c.id !== activeId);
-            activeId = null;
-            save();
-            location.reload();
-        }
+    function saveProfile() {
+        const c = db.find(x => x.id === activeId); if(!c) return;
+        c.name = document.getElementById('name').value; c.phone = document.getElementById('phone').value; c.city = document.getElementById('city').value;
+        save(); renderList(); alert("Saved!");
     }
-
-    // --- CORE FUNCTIONS ---
+    function deleteCustomer() { if(confirm("Delete this profile?")) { db = db.filter(x=>x.id!==activeId); save(); location.reload(); } }
     function save() { localStorage.setItem('Harvest_V14', JSON.stringify(db)); }
-    
-    function search() {
-        let term = document.getElementById('find').value.toLowerCase();
-        document.querySelectorAll('.cust-item').forEach(el => {
-            el.style.display = el.innerText.toLowerCase().includes(term) ? 'block' : 'none';
-        });
-    }
+    function search() { let t = document.getElementById('find').value.toLowerCase(); document.querySelectorAll('.cust-item').forEach(i => i.style.display = i.innerText.toLowerCase().includes(t) ? 'flex' : 'none'); }
 
-    function hardReset() {
-        if(confirm("DANGER: This will delete ALL data. Continue?")) {
-            localStorage.clear();
-            location.reload();
-        }
-    }
-
-    function renderTotals() {
-        let totalAcres = 0;
-        db.forEach(c => c.history.forEach(h => totalAcres += h.acres));
-        document.getElementById('totals-content').innerHTML = `<h4>Total Acres Worked: ${totalAcres.toFixed(2)}</h4>`;
-    }
-
-    // Init
     renderList();
+    updateGlobalStats();
 </script>
 
 </body>
