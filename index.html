@@ -3,61 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>අස්වනු නෙලීම් - Enterprise POS</title>
+    <title>අස්වනු නෙලීම් - Master POS V9</title>
     <style>
         :root { --primary: #1b5e20; --secondary: #0d47a1; --bg: #f4f7f6; --dark: #333; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Side Menu (3-Dot Menu) */
-        .side-menu { width: 0; position: fixed; z-index: 1000; height: 100%; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.4s; padding-top: 60px; color: white; }
+        /* Side Menu (3-Dot) */
+        .side-menu { width: 0; position: fixed; z-index: 1000; height: 100%; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.4s; padding-top: 60px; }
         .side-menu a { padding: 15px 25px; text-decoration: none; font-size: 18px; color: #818181; display: block; transition: 0.3s; cursor: pointer; }
         .side-menu a:hover { color: #f1f1f1; background: #222; }
-        .side-menu .closebtn { position: absolute; top: 10px; right: 25px; font-size: 36px; }
+        .side-menu .closebtn { position: absolute; top: 10px; right: 25px; font-size: 36px; color: white; }
 
-        /* Sidebar & Layout */
-        .sidebar { width: 300px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
+        /* Sidebar & Customer List */
+        .sidebar { width: 320px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
         .sidebar-header { padding: 15px; background: var(--primary); color: white; display: flex; align-items: center; gap: 10px; }
         .menu-dots { font-size: 24px; cursor: pointer; padding: 5px; }
         .search-area { padding: 10px; background: #fafafa; border-bottom: 1px solid #eee; }
         .search-area input { width: 100%; padding: 8px; border-radius: 20px; border: 1px solid #ccc; outline: none; }
         .customer-list { flex: 1; overflow-y: auto; }
-        .cust-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .cust-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .cust-no { color: #888; font-weight: bold; font-size: 0.9rem; margin-right: 5px; }
         .cust-item.active { background: #e8f5e9; border-left: 5px solid var(--primary); font-weight: bold; }
 
+        /* Main Workspace */
         .main-content { flex: 1; padding: 20px; overflow-y: auto; background: white; }
         .view-panel { display: none; }
         .view-panel.active { display: block; }
 
         /* UI Elements */
-        .card { background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; }
+        .card { background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn { padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
+        label { font-size: 0.75rem; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
+        .btn { padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
         .btn-green { background: var(--primary); }
         .btn-blue { background: var(--secondary); }
         .btn-red { background: #d32f2f; }
 
         /* Receipt (80mm) */
-        .receipt { width: 350px; margin: auto; padding: 10px; border: 1px solid #eee; font-size: 10pt; }
+        .receipt { width: 350px; margin: auto; padding: 10px; border: 1px solid #eee; font-size: 10pt; background: #fff; }
         .line { border-top: 1px dashed #000; margin: 10px 0; }
         table { width: 100%; border-collapse: collapse; }
-        td { padding: 5px 0; border-bottom: 1px dotted #ccc; }
+        td { padding: 6px 0; border-bottom: 1px dotted #ccc; vertical-align: top; }
+
+        /* Appointments & Employee Lists */
+        .entry-list-item { background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 5px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
 
         @media print {
-            .sidebar, .side-menu, .form-hide, .print-hide, .btn { display: none !important; }
-            body { display: block; width: 80mm; }
-            .main-content { padding: 0; width: 80mm; }
-            .receipt { width: 72mm; border: none; margin: 0; }
+            .sidebar, .side-menu, .print-hide, .btn, .action-btns { display: none !important; }
+            body { display: block; width: 80mm; background: white; }
+            .main-content { padding: 0; width: 80mm; overflow: visible; }
+            .receipt { width: 72mm; border: none; margin: 0; padding: 2mm; box-shadow: none; }
+            .sig-area { display: block !important; text-align: center; margin-top: 30px; border-top: 1px solid #000; width: 140px; margin-left: auto; margin-right: auto; }
         }
+        .sig-area { display: none; }
     </style>
 </head>
 <body>
 
 <div id="mySideMenu" class="side-menu">
     <a class="closebtn" onclick="closeNav()">&times;</a>
-    <a onclick="switchView('view-main')">🚜 Ledger (ප්‍රධාන බිල්පත)</a>
+    <a onclick="switchView('view-main')">🚜 Ledger (බිල්පත)</a>
     <a onclick="switchView('view-quick')">🔍 Quick Check Overview</a>
-    <a onclick="switchView('view-totals')">💰 Totals & Balance</a>
+    <a onclick="switchView('view-totals')">💰 Total Received & Balance</a>
     <a onclick="switchView('view-fuel')">⛽ Fuel Tracker</a>
     <a onclick="switchView('view-appoint')">📅 Appointments</a>
     <a onclick="switchView('view-employee')">👥 Employee Profile</a>
@@ -68,9 +76,9 @@
     <div class="sidebar-header">
         <span class="menu-dots" onclick="openNav()">&#9776;</span>
         <span style="font-weight:bold;">අස්වනු නෙලීම්</span>
-        <button onclick="addCustomer()" style="margin-left:auto; cursor:pointer; border:none; background:white; color:green; border-radius:50%; width:25px; height:25px; font-weight:bold;">+</button>
+        <button onclick="addCustomer()" style="margin-left:auto; cursor:pointer; border:none; background:white; color:green; border-radius:50%; width:28px; height:28px; font-weight:bold;">+</button>
     </div>
-    <div class="search-area"><input type="text" id="find" placeholder="Search..." onkeyup="search()"></div>
+    <div class="search-area"><input type="text" id="find" placeholder="නම සොයන්න..." onkeyup="search()"></div>
     <div class="customer-list" id="list"></div>
 </div>
 
@@ -86,7 +94,7 @@
             <div class="grid">
                 <div><label>දිනය</label><input type="date" id="date"></div>
                 <div><label>අක්කර</label><input type="number" id="acres" step="0.01"></div>
-                <div><label>මිල</label><input type="number" id="rate"></div>
+                <div><label>අක්කරයක මිල</label><input type="number" id="rate"></div>
             </div>
             <div class="grid">
                 <div><label>ටෙරල්</label><input type="number" id="trailers"></div>
@@ -101,14 +109,18 @@
         </div>
 
         <div class="receipt">
-            <div class="text-center" style="text-align:center;">
+            <div style="text-align:center;">
                 <h2 id="b_name" style="margin:0;">අස්වනු නෙලීම්</h2>
-                <p id="b_info" style="font-size:9pt; margin:5px 0;">L.B.4 හිගුරක්දමන, හිගුරක්ගොඩ | 077-2843713</p>
+                <p id="b_info" style="font-size:8.5pt; margin:4px 0;">L.B.4 හිගුරක්දමන, හිගුරක්ගොඩ | 077-2843713</p>
                 <div class="line"></div>
             </div>
-            <div style="font-size:9pt;">
-                <b>Customer:</b> <span id="d_name"></span><br>
-                <b>Date:</b> <span id="d_date"></span>
+            <div style="font-size:9pt; line-height: 1.4;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span><b>පාරිභෝගික අංකය:</b> <span id="d_no"></span></span>
+                    <span><b>දිනය:</b> <span id="d_date"></span></span>
+                </div>
+                <b>නම:</b> <span id="d_name"></span><br>
+                <b>ලිපිනය:</b> <span id="d_city"></span>
             </div>
             <div class="line"></div>
             <table>
@@ -117,25 +129,28 @@
             </table>
             <div class="line"></div>
             <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:11pt;">
-                <span>Balance Due:</span> <span id="total">0.00</span>
+                <span>මුළු හිඟය (Due Balance):</span> <span id="total">0.00</span>
             </div>
+            <div class="sig-area">අනුමත කළේ</div>
         </div>
     </div>
 
     <div id="view-quick" class="view-panel">
-        <h3>🔍 Quick Check Overview (සියලුම හිඟ මුදල්)</h3>
-        <table border="1" style="width:100%; border-collapse:collapse; text-align:left;">
-            <thead style="background:#eee;"><tr><th>නම</th><th>දුරකථන</th><th>මුළු හිඟය</th></tr></thead>
-            <tbody id="quick-rows"></tbody>
-        </table>
+        <h3>🔍 Quick Check Overview (හිඟ මුදල් ලැයිස්තුව)</h3>
+        <div class="card">
+            <table width="100%" border="1" style="border-collapse:collapse; text-align:left;">
+                <thead style="background:#eee;"><tr><th>අංකය</th><th>නම</th><th>දුරකථන</th><th>හිඟය</th></tr></thead>
+                <tbody id="quick-rows"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="view-totals" class="view-panel">
-        <h3>💰 ව්‍යාපාරයේ මුළු තත්වය (Overall Totals)</h3>
+        <h3>💰 ව්‍යාපාරයේ මුළු තත්වය (Financial Summary)</h3>
         <div class="grid">
-            <div class="card" style="background:#e8f5e9;"><h4>Total Received</h4><h2 id="t_rec" style="color:green;">0</h2></div>
-            <div class="card" style="background:#ffebee;"><h4>Total Remaining</h4><h2 id="t_rem" style="color:red;">0</h2></div>
-            <div class="card" style="background:#e3f2fd;"><h4>Total Acres Done</h4><h2 id="t_acre">0</h2></div>
+            <div class="card" style="background:#e8f5e9;"><p>මුළු ලැබුණු මුදල</p><h2 id="t_rec" style="color:green;">0.00</h2></div>
+            <div class="card" style="background:#ffebee;"><p>මුළු ලැබීමට ඇති හිඟය</p><h2 id="t_rem" style="color:red;">0.00</h2></div>
+            <div class="card" style="background:#e3f2fd;"><p>වැඩ කළ මුළු අක්කර</p><h2 id="t_acre">0</h2></div>
         </div>
     </div>
 
@@ -143,35 +158,35 @@
         <h3>⛽ Fuel Tracker (ඉන්ධන වියදම්)</h3>
         <div class="card">
             <div class="grid">
-                <input type="date" id="f_date">
-                <input type="number" id="f_liters" placeholder="Liters">
-                <input type="number" id="f_cost" placeholder="Cost (Rs)">
+                <div><label>දිනය</label><input type="date" id="f_date"></div>
+                <div><label>ලීටර් ගණන</label><input type="number" id="f_liters"></div>
+                <div><label>මුදල (Rs)</label><input type="number" id="f_cost"></div>
             </div>
-            <button class="btn btn-blue" onclick="addFuel()">වියදම ඇතුළත් කරන්න</button>
+            <button class="btn btn-blue" onclick="addFuel()">වියදම සුරකින්න</button>
         </div>
-        <table width="100%" id="fuel-table" border="1"></table>
+        <div id="fuel-list"></div>
     </div>
 
     <div id="view-appoint" class="view-panel">
         <h3>📅 Appointments (වැඩ නියමිත දින)</h3>
         <div class="card">
             <div class="grid">
-                <input type="date" id="a_date">
-                <input type="text" id="a_cust" placeholder="Customer Name">
-                <input type="text" id="a_note" placeholder="Note (Ex: 10 Acres)">
+                <div><label>දිනය</label><input type="date" id="a_date"></div>
+                <div><label>නම</label><input type="text" id="a_cust"></div>
+                <div><label>සටහන</label><input type="text" id="a_note"></div>
             </div>
-            <button class="btn btn-blue" onclick="addAppoint()">Appoint ඇතුළත් කරන්න</button>
+            <button class="btn btn-blue" onclick="addAppoint()">Appointment එක එක් කරන්න</button>
         </div>
         <div id="appoint-list"></div>
     </div>
 
     <div id="view-employee" class="view-panel">
-        <h3>👥 Employee Profile (සේවක විස්තර)</h3>
+        <h3>👥 Employee Profile (සේවක කළමනාකරණය)</h3>
         <div class="card">
             <div class="grid">
-                <input type="text" id="e_name" placeholder="Employee Name">
-                <input type="text" id="e_pos" placeholder="Position (Driver/Helper)">
-                <input type="number" id="e_pay" placeholder="Daily Pay">
+                <input type="text" id="e_name" placeholder="නම">
+                <input type="text" id="e_pos" placeholder="තනතුර (Driver/Helper)">
+                <input type="number" id="e_pay" placeholder="දෛනික වැටුප">
             </div>
             <button class="btn btn-blue" onclick="addEmp()">සේවකයා ඇතුළත් කරන්න</button>
         </div>
@@ -187,11 +202,10 @@
             <button class="btn btn-green" onclick="saveSettings()">තොරතුරු සුරකින්න</button>
         </div>
     </div>
-
 </div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('Harvest_V7')) || [];
+    let db = JSON.parse(localStorage.getItem('Harvest_V9')) || [];
     let fuel = JSON.parse(localStorage.getItem('H_Fuel')) || [];
     let appoint = JSON.parse(localStorage.getItem('H_App')) || [];
     let employees = JSON.parse(localStorage.getItem('H_Emp')) || [];
@@ -199,7 +213,6 @@
     let activeId = null;
     let editIdx = -1;
 
-    // --- Navigation Functions ---
     function openNav() { document.getElementById("mySideMenu").style.width = "280px"; }
     function closeNav() { document.getElementById("mySideMenu").style.width = "0"; }
     
@@ -208,27 +221,31 @@
         document.getElementById(id).classList.add('active');
         if(id === 'view-quick') showQuickCheck();
         if(id === 'view-totals') showTotals();
+        if(id === 'view-fuel') renderFuel();
+        if(id === 'view-appoint') renderAppoint();
+        if(id === 'view-employee') renderEmp();
         closeNav();
     }
 
-    // --- Core Ledger Functions ---
     function render() {
         const l = document.getElementById('list'); l.innerHTML = '';
-        db.forEach(c => {
+        db.forEach((c, index) => {
             const d = document.createElement('div');
             d.className = `cust-item ${activeId === c.id ? 'active' : ''}`;
-            d.innerHTML = `<div>${c.name}</div><small>${c.city || ''}</small>`;
-            d.onclick = () => load(c.id);
+            let visualNo = `(${db.length - index})`;
+            d.innerHTML = `<div><span class="cust-no">${visualNo}</span> ${c.name}</div><small>${c.city || ''}</small>`;
+            d.onclick = () => load(c.id, visualNo);
             l.appendChild(d);
         });
     }
 
-    function load(id) {
+    function load(id, visualNo) {
         activeId = id; editIdx = -1;
         const c = db.find(x => x.id === id);
         document.getElementById('name').value = c.name;
         document.getElementById('phone').value = c.phone;
         document.getElementById('city').value = c.city;
+        document.getElementById('d_no').innerText = visualNo;
         document.getElementById('d_date').innerText = new Date().toLocaleDateString();
         showTable(); render();
     }
@@ -236,15 +253,16 @@
     function showTable() {
         const c = db.find(x => x.id === activeId);
         document.getElementById('d_name').innerText = c.name;
+        document.getElementById('d_city').innerText = c.city;
         const tb = document.getElementById('rows'); tb.innerHTML = '';
         let balance = 0;
         c.history.forEach((h, i) => {
             let sub = (h.acres * h.rate) + (h.trailers * h.tprice);
             let due = sub - h.paid; balance += due;
-            tb.innerHTML += `<tr><td><b>${h.date}</b><br>${h.acres}ac | ${h.trailers}T</td><td align="right">${sub}<br><small style="color:red">Due: ${due}</small><br>
+            tb.innerHTML += `<tr><td><b>${h.date}</b><br>${h.acres}ac x ${h.rate}<br>${h.trailers}T x ${h.tprice}</td><td align="right">${sub.toLocaleString()}<br><small style="color:red">H: ${due.toLocaleString()}</small><br class="print-hide">
             <button class="print-hide" onclick="editRow(${i})">✎</button> <button class="print-hide" onclick="delRow(${i})">×</button></td></tr>`;
         });
-        document.getElementById('total').innerText = balance.toLocaleString();
+        document.getElementById('total').innerText = "Rs. " + balance.toLocaleString();
     }
 
     function addEntry() {
@@ -259,28 +277,22 @@
         if(!h.date || !activeId) return alert("පාරිභෝගිකයා සහ දිනය තෝරන්න!");
         const c = db.find(x => x.id === activeId);
         if(editIdx === -1) c.history.push(h); else { c.history[editIdx] = h; editIdx = -1; }
-        saveAll(); load(activeId);
+        save(); load(activeId, document.getElementById('d_no').innerText);
         ['date','acres','rate','trailers','tprice','paid'].forEach(i => document.getElementById(i).value = '');
+        document.getElementById('mainBtn').innerText = "+ දත්ත ඇතුළත් කරන්න";
     }
 
-    // --- Feature Functions ---
     function showQuickCheck() {
         const tb = document.getElementById('quick-rows'); tb.innerHTML = '';
-        db.forEach(c => {
+        db.forEach((c, index) => {
             let due = c.history.reduce((s, h) => s + ((h.acres * h.rate) + (h.trailers * h.tprice) - h.paid), 0);
-            if(due > 0) tb.innerHTML += `<tr><td>${c.name}</td><td>${c.phone}</td><td style="color:red; font-weight:bold;">${due.toLocaleString()}</td></tr>`;
+            if(due > 0) tb.innerHTML += `<tr><td>(${db.length - index})</td><td>${c.name}</td><td>${c.phone}</td><td style="color:red; font-weight:bold;">${due.toLocaleString()}</td></tr>`;
         });
     }
 
     function showTotals() {
         let rec = 0, rem = 0, ac = 0;
-        db.forEach(c => {
-            c.history.forEach(h => {
-                rec += h.paid;
-                rem += ((h.acres * h.rate) + (h.trailers * h.tprice) - h.paid);
-                ac += h.acres;
-            });
-        });
+        db.forEach(c => { c.history.forEach(h => { rec += h.paid; rem += ((h.acres * h.rate) + (h.trailers * h.tprice) - h.paid); ac += h.acres; }); });
         document.getElementById('t_rec').innerText = "Rs. " + rec.toLocaleString();
         document.getElementById('t_rem').innerText = "Rs. " + rem.toLocaleString();
         document.getElementById('t_acre').innerText = ac.toFixed(2);
@@ -288,38 +300,54 @@
 
     function addFuel() {
         fuel.push({d: document.getElementById('f_date').value, l: document.getElementById('f_liters').value, c: document.getElementById('f_cost').value });
-        localStorage.setItem('H_Fuel', JSON.stringify(fuel));
-        alert("Fuel Added!");
+        localStorage.setItem('H_Fuel', JSON.stringify(fuel)); renderFuel();
+    }
+    function renderFuel() {
+        const div = document.getElementById('fuel-list'); div.innerHTML = '';
+        fuel.forEach(f => div.innerHTML += `<div class="entry-list-item"><span>${f.d} - ${f.l}L</span><b>Rs. ${f.c}</b></div>`);
+    }
+
+    function addAppoint() {
+        appoint.push({d: document.getElementById('a_date').value, c: document.getElementById('a_cust').value, n: document.getElementById('a_note').value });
+        localStorage.setItem('H_App', JSON.stringify(appoint)); renderAppoint();
+    }
+    function renderAppoint() {
+        const div = document.getElementById('appoint-list'); div.innerHTML = '';
+        appoint.forEach(a => div.innerHTML += `<div class="entry-list-item"><span>${a.d} | <b>${a.c}</b></span><small>${a.n}</small></div>`);
+    }
+
+    function addEmp() {
+        employees.push({n: document.getElementById('e_name').value, p: document.getElementById('e_pos').value, s: document.getElementById('e_pay').value });
+        localStorage.setItem('H_Emp', JSON.stringify(employees)); renderEmp();
+    }
+    function renderEmp() {
+        const div = document.getElementById('emp-list'); div.innerHTML = '';
+        employees.forEach(e => div.innerHTML += `<div class="entry-list-item"><span>${e.n} (${e.p})</span><b>Rs. ${e.s}</b></div>`);
     }
 
     function saveSettings() {
         document.getElementById('b_name').innerText = document.getElementById('s_name').value;
         document.getElementById('b_info').innerText = document.getElementById('s_info').value;
-        alert("Settings Saved!");
+        alert("සැකසුම් සුරැකිණි!");
     }
 
-    function saveAll() { localStorage.setItem('Harvest_V7', JSON.stringify(db)); }
-    function addCustomer() { 
-        const id = Date.now(); 
-        db.unshift({ id, name: "නව පාරිභෝගිකයා", phone: "", city: "", history: [] }); 
-        saveAll(); load(id); 
-    }
-    function editRow(i) {
-        editIdx = i; const h = db.find(x => x.id === activeId).history[i];
-        document.getElementById('date').value = h.date; document.getElementById('acres').value = h.acres;
-        document.getElementById('rate').value = h.rate; document.getElementById('trailers').value = h.trailers;
-        document.getElementById('tprice').value = h.tprice; document.getElementById('paid').value = h.paid;
-        document.getElementById('mainBtn').innerText = "Update Row " + (i+1);
-    }
-    function delRow(i) { if(confirm("Delete?")) { db.find(x => x.id === activeId).history.splice(i,1); saveAll(); showTable(); } }
+    function save() { localStorage.setItem('Harvest_V9', JSON.stringify(db)); }
+    function addCustomer() { const id = Date.now(); db.unshift({ id, name: "නව පාරිභෝගිකයා", phone: "", city: "", history: [] }); save(); render(); load(id, `(${db.length})`); }
     function saveProfile() {
         const c = db.find(x => x.id === activeId);
         c.name = document.getElementById('name').value; c.phone = document.getElementById('phone').value; c.city = document.getElementById('city').value;
-        saveAll(); render(); showTable(); alert("Profile Saved!");
+        save(); render(); showTable(); alert("සුරැකිණි!");
     }
+    function editRow(i) {
+        editIdx = i; const h = db.find(x => x.id === activeId).history[i];
+        ['date','acres','rate','trailers','tprice','paid'].forEach(key => document.getElementById(key).value = h[key]);
+        document.getElementById('mainBtn').innerText = "නිවැරදි කරන්න (Update Row " + (i+1) + ")";
+        window.scrollTo(0,0);
+    }
+    function delRow(i) { if(confirm("මකා දමන්නද?")) { db.find(x => x.id === activeId).history.splice(i,1); save(); showTable(); } }
     function search() {
         let t = document.getElementById('find').value.toLowerCase();
-        document.querySelectorAll('.cust-item').forEach(i => i.style.display = i.innerText.toLowerCase().includes(t) ? 'block' : 'none');
+        document.querySelectorAll('.cust-item').forEach(i => i.style.display = i.innerText.toLowerCase().includes(t) ? 'flex' : 'none');
     }
 
     render();
