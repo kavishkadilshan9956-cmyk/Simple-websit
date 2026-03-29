@@ -3,51 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>අස්වනු නෙලීම් - POS V5</title>
+    <title>අස්වනු නෙලීම් - Master POS</title>
     <style>
-        :root { --primary: #2e7d32; --secondary: #1565c0; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; }
+        :root { --primary: #1b5e20; --secondary: #0d47a1; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; color: #333; }
         
         /* Sidebar Styles */
-        .sidebar { width: 300px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; }
-        .search-box { padding: 10px; border-bottom: 1px solid #ddd; background: #eee; }
-        .search-box input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 20px; text-indent: 10px; outline: none; }
+        .sidebar { width: 320px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; }
+        .search-box { padding: 10px; border-bottom: 1px solid #ddd; background: #fafafa; }
+        .search-box input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; box-sizing: border-box; }
         .customer-list { flex: 1; overflow-y: auto; }
-        .customer-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
+        .customer-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
         .customer-item:hover { background: #f1f8e9; }
         .customer-item.active { background: #e8f5e9; border-left: 6px solid var(--primary); font-weight: bold; }
         
-        .main-content { flex: 1; padding: 20px; overflow-y: auto; background: white; }
-        .edit-section { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        label { font-size: 0.7rem; font-weight: bold; color: #666; display: block; margin-bottom: 3px; }
-        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        /* Main Workspace */
+        .main-content { flex: 1; padding: 25px; overflow-y: auto; background: white; }
+        .edit-section { background: #fdfdfd; padding: 20px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        label { font-size: 0.75rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 0.9rem; }
         
-        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; flex: 1; text-align: center; }
         .btn-save { background: var(--primary); color: white; }
-        .btn-print { background: #444; color: white; }
-        .btn-edit { background: #ffa000; color: white; font-size: 0.7rem; margin-right: 5px; }
-        .btn-del { background: #d32f2f; color: white; font-size: 0.7rem; }
+        .btn-add { background: var(--secondary); color: white; }
+        .btn-print { background: #333; color: white; }
+        
+        .action-btn { border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8rem; margin: 0 2px; color: white; }
+        .edit-row-btn { background: #ffa000; }
+        .del-row-btn { background: #d32f2f; }
 
-        /* Receipt Styles */
-        .receipt-container { width: 400px; margin: auto; padding: 15px; border: 1px solid #eee; background: white; position: relative; }
-        .header-center { text-align: center; }
+        /* Receipt Container (80mm) */
+        .receipt-container { width: 380px; margin: auto; padding: 15px; border: 1px solid #eee; background: white; }
+        .header-center { text-align: center; margin-bottom: 15px; }
         .divider { border-top: 1px dashed #000; margin: 10px 0; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+        table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
         th { text-align: left; border-bottom: 1px solid #000; padding: 5px 0; }
         td { padding: 8px 0; border-bottom: 1px dotted #ccc; vertical-align: top; }
 
+        /* PRINT SETTINGS FOR 80MM PRINTER */
         @media print {
             @page { size: 80mm auto; margin: 0; }
-            body { background: white; width: 80mm; }
-            .sidebar, .edit-section, .btn, .print-hide, .action-btns { display: none !important; }
-            .main-content { padding: 0; width: 80mm; }
-            .receipt-container { width: 72mm; border: none; padding: 2mm; margin: 0; }
-            h1 { font-size: 18pt !important; }
-            .sig-section { display: block !important; text-align: center; margin-top: 30px; }
-            .sig-line { border-top: 1px solid #000; width: 140px; margin: 30px auto 5px; }
+            body { background: white; width: 80mm; display: block; height: auto; }
+            .sidebar, .edit-section, .print-hide { display: none !important; }
+            .main-content { padding: 0; width: 80mm; overflow: visible; }
+            .receipt-container { width: 72mm; border: none; padding: 2mm; margin: 0; box-shadow: none; }
+            h1 { font-size: 18pt !important; margin: 5px 0; }
+            .divider { border-top: 1px dashed #000; }
+            .sig-section { display: block !important; text-align: center; margin-top: 35px; }
+            .sig-line { border-top: 1px solid #000; width: 140px; margin: 35px auto 5px; }
+            td, th { font-size: 9pt !important; }
         }
         .sig-section { display: none; }
     </style>
@@ -56,8 +64,8 @@
 
 <div class="sidebar print-hide">
     <div class="sidebar-header">
-        <span>පාරිභෝගිකයින්</span>
-        <button onclick="addNewCustomer()" style="background:white; color:green; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold;">+</button>
+        <span style="font-size: 1.2rem; font-weight: bold;">පාරිභෝගිකයින්</span>
+        <button onclick="addNewCustomer()" style="background:white; color:green; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; font-size:1.2rem;">+</button>
     </div>
     <div class="search-box">
         <input type="text" id="searchBar" placeholder="නම සොයන්න (Search)..." onkeyup="filterCustomers()">
@@ -66,81 +74,82 @@
 </div>
 
 <div class="main-content">
-    <div id="welcome" style="text-align:center; margin-top:50px; color:#999;">
+    <div id="welcome" style="text-align:center; margin-top:100px; color:#999;">
         <h2>පාරිභෝගිකයෙකු තෝරාගන්න.</h2>
     </div>
 
     <div id="appBody" style="display:none;">
         <div class="edit-section print-hide">
-            <h3 style="margin-top:0; color:var(--primary);">දත්ත ඇතුළත් කිරීම / වෙනස් කිරීම</h3>
+            <h3 style="margin-top:0; color:var(--primary); border-bottom:1px solid #eee; padding-bottom:10px;">පාරිභෝගික දත්ත සහ ගනුදෙනු</h3>
             <div class="grid-3">
-                <div><label>නම</label><input type="text" id="c_name"></div>
-                <div><label>දුරකථන</label><input type="text" id="c_phone"></div>
-                <div><label>ලිපිනය</label><input type="text" id="c_city"></div>
+                <div><label>නම (Customer Name)</label><input type="text" id="c_name"></div>
+                <div><label>දුරකථන (Phone)</label><input type="text" id="c_phone"></div>
+                <div><label>ලිපිනය (Address)</label><input type="text" id="c_city"></div>
             </div>
             <div class="grid-3">
-                <div><label>දිනය</label><input type="date" id="n_date"></div>
-                <div><label>අක්කර</label><input type="number" id="n_acres" step="0.1"></div>
-                <div><label>අක්කරයක මිල</label><input type="number" id="n_rate"></div>
+                <div><label>දිනය (Date)</label><input type="date" id="n_date"></div>
+                <div><label>අක්කර (Acres)</label><input type="number" id="n_acres" step="0.01" placeholder="0.00"></div>
+                <div><label>අක්කරයක මිල (Rate)</label><input type="number" id="n_rate" placeholder="0"></div>
             </div>
             <div class="grid-3">
-                <div><label>ටෙරල් ගණන</label><input type="number" id="n_trailers"></div>
-                <div><label>ටෙරල් මිල</label><input type="number" id="n_tprice"></div>
-                <div><label>ගෙවූ මුදල්</label><input type="number" id="n_paid"></div>
+                <div><label>ටෙරල් ගණන (Trailers)</label><input type="number" id="n_trailers" placeholder="0"></div>
+                <div><label>ටෙරල් මිල (T.Price)</label><input type="number" id="n_tprice" placeholder="0"></div>
+                <div><label>ගෙවූ මුදල් (Paid)</label><input type="number" id="n_paid" placeholder="0"></div>
             </div>
-            <div style="display:flex; gap:10px;">
-                <button class="btn btn-save" onclick="saveCustomerProfile()">Save Profile</button>
-                <button class="btn" id="addUpdateBtn" onclick="addOrUpdateEntry()" style="background:#0277bd; color:white;">+ Add/Update Entry</button>
+            <div class="btn-row">
+                <button class="btn btn-save" onclick="saveCustomerProfile()">පාරිභෝගිකයා සුරකින්න</button>
+                <button class="btn btn-add" id="addUpdateBtn" onclick="addOrUpdateEntry()">+ දත්ත ඇතුළත් කරන්න</button>
                 <button class="btn btn-print" onclick="window.print()">Print Receipt</button>
             </div>
         </div>
 
         <div class="receipt-container">
             <div class="header-center">
-                <h1 style="margin:0;">අස්වනු නෙලීම්</h1>
-                <p style="margin:2px 0; font-size:10pt;">L.B.4 හිගුරක්දමන, හිගුරක්ගොඩ</p>
-                <p style="margin:2px 0; font-size:10pt;">දුරකථන: 077-2843713</p>
+                <h1 style="margin:0; font-size: 22pt;">අස්වනු නෙලීම්</h1>
+                <p style="margin:4px 0; font-size:10pt;">L.B.4 හිගුරක්දමන, හිගුරක්ගොඩ</p>
+                <p style="margin:4px 0; font-size:10pt;">දුරකථන: 077-2843713</p>
                 <div class="divider"></div>
                 <p id="disp_date" style="font-weight:bold; font-size:9pt;"></p>
             </div>
 
-            <div style="font-size:9pt; margin-bottom:5px;">
+            <div style="font-size:10pt; line-height: 1.4;">
                 <strong>පාරිභෝගිකයා:</strong> <span id="disp_name"></span><br>
-                <strong>ලිපිනය:</strong> <span id="disp_city"></span>
+                <strong>ලිපිනය:</strong> <span id="disp_city"></span><br>
+                <strong>දුරකථන:</strong> <span id="disp_phone"></span>
             </div>
             <div class="divider"></div>
 
             <table>
                 <thead>
                     <tr>
-                        <th>විස්තරය (Details)</th>
+                        <th style="width: 70%;">විස්තරය (Details)</th>
                         <th style="text-align:right;">මුදල</th>
-                        <th class="print-hide" style="text-align:right; width:60px;">ක්‍රියා</th>
+                        <th class="print-hide" style="text-align:right;">-</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
 
             <div class="divider"></div>
-            <div style="display:flex; justify-content:space-between; font-size:12pt; font-weight:bold;">
-                <span>මුළු හිඟය:</span>
+            <div style="display:flex; justify-content:space-between; font-size:13pt; font-weight:bold;">
+                <span>මුළු හිඟය (Due):</span>
                 <span id="grandTotal">0.00</span>
             </div>
             <div class="divider"></div>
 
             <div class="sig-section">
-                <p style="font-size:8pt;">ස්තූතියි! නැවත එන්න.</p>
+                <p style="font-size:9pt;">ස්තූතියි! නැවත එන්න.</p>
                 <div class="sig-line"></div>
-                <p style="font-size:8pt;">Authorized Signature</p>
+                <p style="font-size:9pt;">අනුමත කළේ (Authorized)</p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    let customers = JSON.parse(localStorage.getItem('Harvest_Pro_V5')) || [];
+    let customers = JSON.parse(localStorage.getItem('Harvest_Master_DB')) || [];
     let activeId = null;
-    let editIndex = -1; // -1 means adding new, otherwise editing existing
+    let editIndex = -1;
 
     function renderList() {
         const list = document.getElementById('custList');
@@ -156,10 +165,8 @@
 
     function filterCustomers() {
         const term = document.getElementById('searchBar').value.toLowerCase();
-        const items = document.querySelectorAll('.customer-item');
-        items.forEach(item => {
-            const name = item.innerText.toLowerCase();
-            item.style.display = name.includes(term) ? 'block' : 'none';
+        document.querySelectorAll('.customer-item').forEach(item => {
+            item.style.display = item.innerText.toLowerCase().includes(term) ? 'block' : 'none';
         });
     }
 
@@ -175,13 +182,20 @@
         const c = customers.find(cust => cust.id === id);
         document.getElementById('welcome').style.display = 'none';
         document.getElementById('appBody').style.display = 'block';
-        document.getElementById('disp_date').innerText = "දිනය: " + new Date().toLocaleDateString();
+        document.getElementById('disp_date').innerText = "මුද්‍රිත දිනය: " + new Date().toLocaleDateString();
         
         document.getElementById('c_name').value = c.name;
         document.getElementById('c_phone').value = c.phone;
         document.getElementById('c_city').value = c.city;
         
-        updateDisplay();
+        refreshDisplay();
+    }
+
+    function refreshDisplay() {
+        const c = customers.find(cust => cust.id === activeId);
+        document.getElementById('disp_name').innerText = c.name;
+        document.getElementById('disp_phone').innerText = c.phone;
+        document.getElementById('disp_city').innerText = c.city;
         renderTable();
         renderList();
     }
@@ -203,15 +217,17 @@
                 <tr>
                     <td>
                         <strong>${h.date}</strong><br>
-                        ${h.acres} ac x ${h.rate} / ${h.trailers} T x ${h.tprice}
+                        අක්කර: ${h.acres} x ${h.rate}<br>
+                        ටෙරල්: ${h.trailers} x ${h.tprice}<br>
+                        ගෙවා ඇත: ${h.paid.toLocaleString()}
                     </td>
-                    <td style="text-align:right; vertical-align:bottom;">
+                    <td style="text-align:right; vertical-align:bottom; font-weight:bold;">
                         ${dayTotal.toLocaleString()}<br>
                         <small style="color:red;">Due: ${dayDue.toLocaleString()}</small>
                     </td>
-                    <td class="print-hide action-btns" style="text-align:right;">
-                        <button class="btn-edit" onclick="editRow(${idx})">✎</button>
-                        <button class="btn-del" onclick="deleteRow(${idx})">×</button>
+                    <td class="print-hide" style="text-align:right; vertical-align:bottom;">
+                        <button class="action-btn edit-row-btn" onclick="editRow(${idx})">✎</button>
+                        <button class="action-btn del-row-btn" onclick="deleteRow(${idx})">×</button>
                     </td>
                 </tr>`;
         });
@@ -227,7 +243,7 @@
             tprice: parseFloat(document.getElementById('n_tprice').value) || 0,
             paid: parseFloat(document.getElementById('n_paid').value) || 0
         };
-        if(!h.date) return alert("දිනය ඇතුළත් කරන්න.");
+        if(!h.date) return alert("කරුණාකර දිනය ඇතුළත් කරන්න.");
         
         const c = customers.find(cust => cust.id === activeId);
         if(editIndex === -1) {
@@ -235,14 +251,12 @@
         } else {
             c.history[editIndex] = h;
             editIndex = -1;
-            document.getElementById('addUpdateBtn').innerText = "+ Add Entry";
-            document.getElementById('addUpdateBtn').style.background = "#0277bd";
+            document.getElementById('addUpdateBtn').innerText = "+ දත්ත ඇතුළත් කරන්න";
+            document.getElementById('addUpdateBtn').style.background = "#0d47a1";
         }
         
-        // Clear Entry
         ['n_date','n_acres','n_rate','n_trailers','n_tprice','n_paid'].forEach(id => document.getElementById(id).value = '');
-        renderTable();
-        saveToStorage();
+        saveAndRefresh();
     }
 
     function editRow(idx) {
@@ -252,4 +266,37 @@
         document.getElementById('n_rate').value = h.rate;
         document.getElementById('n_trailers').value = h.trailers;
         document.getElementById('n_tprice').value = h.tprice;
-        document.getElementById('n_paid').value
+        document.getElementById('n_paid').value = h.paid;
+        
+        editIndex = idx;
+        document.getElementById('addUpdateBtn').innerText = "වෙනස්කම් සුරකින්න (Update Row)";
+        document.getElementById('addUpdateBtn').style.background = "#ffa000";
+        window.scrollTo(0,0);
+    }
+
+    function deleteRow(idx) {
+        if(confirm("මෙම ගනුදෙනුව මකා දැමීමට අවශ්‍යද?")) {
+            customers.find(c => c.id === activeId).history.splice(idx, 1);
+            saveAndRefresh();
+        }
+    }
+
+    function saveCustomerProfile() {
+        const c = customers.find(cust => cust.id === activeId);
+        c.name = document.getElementById('c_name').value;
+        c.phone = document.getElementById('c_phone').value;
+        c.city = document.getElementById('c_city').value;
+        saveAndRefresh();
+        alert("පාරිභෝගික දත්ත සාර්ථකව සුරැකිණි!");
+    }
+
+    function saveAndRefresh() {
+        localStorage.setItem('Harvest_Master_DB', JSON.stringify(customers));
+        refreshDisplay();
+    }
+
+    renderList();
+</script>
+
+</body>
+    </html>
